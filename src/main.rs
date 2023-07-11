@@ -1,4 +1,4 @@
-use clap::{Command, Arg, ArgAction};
+use clap::{Arg, ArgAction, Command};
 
 mod project;
 mod repository;
@@ -17,29 +17,28 @@ fn main() {
                         .short('l')
                         .long("list")
                         .action(ArgAction::SetTrue)
-                        .help("list all created projects")
+                        .help("list all created projects"),
                 )
                 .arg(
                     Arg::new("add")
                         .short('a')
                         .long("add")
                         .action(ArgAction::Set)
-                        .help("create a new project")
-                )
+                        .help("create a new project"),
+                ),
         )
         .get_matches();
-    
+
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
-            
-            if let Some(name) = sub_matches.get_one::<String>("list") {
+            if let Some(_) = sub_matches.get_one::<String>("list") {
                 project::list();
             }
 
             if let Some(name) = sub_matches.get_one::<String>("add") {
-                project::add(&name);
+                project::add(name.to_string());
             }
-        },
+        }
         _ => unreachable!("Exhausted list of subcommands"),
     }
 }
