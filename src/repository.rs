@@ -1,3 +1,4 @@
+use chrono::{DateTime, Local, LocalResult, TimeZone};
 use rusqlite::{Connection, Result};
 
 use crate::project::Project;
@@ -40,12 +41,17 @@ pub fn get_projects() -> Result<Vec<Project>> {
 
     let mut projs: Vec<Project> = Vec::new();
     while let Some(row) = rows.next()? {
-        projs.push(Project::new(
-            row.get(0)?,
-            row.get(1)?,
-            row.get(2)?,
-            row.get(3)?,
-        ));
+        let created = match Local.timestamp_opt(row.get(2)?, 0).single() {
+            None => panic!("Failed to read timestamp from db!"),
+            Some(t) => t,
+        };
+
+        let updated = match Local.timestamp_opt(row.get(3)?, 0).single() {
+            None => panic!("Failed to read timestamp from db!"),
+            Some(t) => t,
+        };
+
+        projs.push(Project::new(row.get(0)?, row.get(1)?, created, updated));
     }
 
     Ok(projs)

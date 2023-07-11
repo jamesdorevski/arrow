@@ -27,7 +27,11 @@ impl Project {
 
 impl std::fmt::Display for Project {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.id, self.name)
+        write!(
+            f,
+            "Id: {}, Name: {}. Created: {}, Updated: {}",
+            self.id, self.name, self.created, self.updated
+        )
     }
 }
 
@@ -42,7 +46,13 @@ pub fn list() {
     // get all projects from the db
     let projs = repository::get_projects().expect("Error retrieving projects");
     // foreach print
+
+    println!("ID    NAME    CREATED     UPDATED");
+
     for proj in &projs {
-        println!("{}", proj);
+        println!(
+            "{:<4}  {:<4}   {:<19}  {:<19}",
+            &proj.id, &proj.name, &proj.created, &proj.updated
+        );
     }
 }

@@ -31,7 +31,8 @@ fn main() {
 
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
-            if let Some(_) = sub_matches.get_one::<String>("list") {
+            if sub_matches.get_flag("list") {
+                println!("list called!");
                 project::list();
             }
 
