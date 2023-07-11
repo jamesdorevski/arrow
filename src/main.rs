@@ -1,5 +1,8 @@
 use clap::{Command, Arg, ArgAction};
 
+mod project;
+mod repository;
+
 fn main() {
     println!("Hello, world!");
 
@@ -20,6 +23,8 @@ fn main() {
                     Arg::new("add")
                         .short('a')
                         .long("add")
+                        .action(ArgAction::Set)
+                        .help("create a new project")
                 )
         )
         .get_matches();
@@ -28,9 +33,10 @@ fn main() {
         Some(("project", sub_matches)) => {
             println!("project list used.");
             
-            let list_selected = sub_matches.get_flag("list");
-            println!("{}", list_selected);
+            if let Some(name) = sub_matches.get_one::<String>("add") {
+                project::add(&name);
+            }
         },
-        _ => unreachable!("Exhausted list of subcommands and "),
+        _ => unreachable!("Exhausted list of subcommands"),
     }
 }
