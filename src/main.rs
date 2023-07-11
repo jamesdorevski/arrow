@@ -31,8 +31,11 @@ fn main() {
     
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
-            println!("project list used.");
             
+            if let Some(name) = sub_matches.get_one::<String>("list") {
+                project::list();
+            }
+
             if let Some(name) = sub_matches.get_one::<String>("add") {
                 project::add(&name);
             }
