@@ -36,16 +36,16 @@ impl std::fmt::Display for Project {
     }
 }
 
-struct ListPadding {
+struct TablePadding {
     id: usize,
     name: usize,
     created: usize,
     updated: usize,
 }
 
-impl ListPadding {
+impl TablePadding {
     pub fn default_padding(max_name: usize) -> Self {
-        ListPadding {
+        TablePadding {
             id: 4,
             name: max_name,
             created: 26,
@@ -62,14 +62,12 @@ pub fn add(name: String) {
 }
 
 pub fn list() {
-    // get all projects from the db
     let projs = repository::get_projects().expect("Error retrieving projects");
-
+    
     let names: Vec<String> = projs.iter().map(|proj| proj.name.to_string()).collect();
-
     let max_name_len = max_str_len(names);
-    let padding = ListPadding::default_padding(max_name_len);
-
+ 
+    let padding = TablePadding::default_padding(max_name_len);
     print_table(padding, projs);
 }
 
@@ -86,7 +84,7 @@ fn max_str_len(input: Vec<String>) -> usize {
     max_len
 }
 
-fn print_table(padding: ListPadding, projs: Vec<Project>) {
+fn print_table(padding: TablePadding, projs: Vec<Project>) {
     println!(
         "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
         "ID",
