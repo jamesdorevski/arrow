@@ -41,7 +41,6 @@ struct ListPadding {
     name: usize,
     created: usize,
     updated: usize,
-
 }
 
 impl ListPadding {
@@ -50,7 +49,7 @@ impl ListPadding {
             id: 4,
             name: max_name,
             created: 26,
-            updated: 26
+            updated: 26,
         }
     }
 }
@@ -66,14 +65,11 @@ pub fn list() {
     // get all projects from the db
     let projs = repository::get_projects().expect("Error retrieving projects");
 
-    let names: Vec<String> = projs
-        .iter()
-        .map(|proj| proj.name.to_string())
-        .collect();
-    
+    let names: Vec<String> = projs.iter().map(|proj| proj.name.to_string()).collect();
+
     let max_name_len = max_str_len(names);
     let padding = ListPadding::default_padding(max_name_len);
-    
+
     print_table(padding, projs);
 }
 
@@ -93,16 +89,27 @@ fn max_str_len(input: Vec<String>) -> usize {
 fn print_table(padding: ListPadding, projs: Vec<Project>) {
     println!(
         "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
-        "ID", "NAME", "CREATED", "UPDATED",
-        width_id = padding.id, width_name = padding.name, width_created = padding.created, width_updated = padding.updated
+        "ID",
+        "NAME",
+        "CREATED",
+        "UPDATED",
+        width_id = padding.id,
+        width_name = padding.name,
+        width_created = padding.created,
+        width_updated = padding.updated
     );
 
     for proj in &projs {
-            println!(
-                "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
-                &proj.id, &proj.name, &proj.created, &proj.updated,
-                width_id = padding.id, width_name = padding.name, width_created = padding.created, width_updated = padding.updated
-            );
-        }
+        println!(
+            "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
+            &proj.id,
+            &proj.name,
+            &proj.created,
+            &proj.updated,
+            width_id = padding.id,
+            width_name = padding.name,
+            width_created = padding.created,
+            width_updated = padding.updated
+        );
+    }
 }
-
