@@ -25,20 +25,32 @@ fn main() {
                         .long("add")
                         .action(ArgAction::Set)
                         .help("create a new project"),
-                ),
+                )
+                .arg(
+                    Arg::new("rm")
+                        .short('r')
+                        .long("rm")
+                        .action(ArgAction::Set)
+                        .value_parser(clap::value_parser!(usize))
+                        .help("remove a project"),
+                )
         )
         .get_matches();
 
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
             if sub_matches.get_flag("list") {
-                println!("list called!");
                 project::list();
             }
 
             if let Some(name) = sub_matches.get_one::<String>("add") {
                 project::add(name.to_string());
             }
+
+            if let Some(id) = sub_matches.get_one::<usize>("rm") {
+                project::delete(id);
+            }
+
         }
         _ => unreachable!("Exhausted list of subcommands"),
     }

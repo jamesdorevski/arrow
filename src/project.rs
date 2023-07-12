@@ -71,6 +71,10 @@ pub fn list() {
     print_table(padding, projs);
 }
 
+pub fn delete(id: &usize) {
+    repository::delete_project(id);
+}
+
 fn max_str_len(input: Vec<String>) -> usize {
     let mut max_len = 0usize;
     for s in input {

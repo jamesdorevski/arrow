@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, LocalResult, TimeZone};
+use chrono::{Local, TimeZone};
 use rusqlite::{Connection, Result};
 
 use crate::project::Project;
@@ -55,4 +55,19 @@ pub fn get_projects() -> Result<Vec<Project>> {
     }
 
     Ok(projs)
+}
+
+pub fn delete_project(id: &usize) {
+    let conn = Connection::open("arrow.db").expect("Failed to open db");
+
+    match conn.execute("DELETE FROM projects WHERE id = ?1", &[id]) {
+        Ok(rows) => {
+            if rows < 1 {
+                eprintln!("No project with id {} exists. Please specify an existing project.", id);
+            } else {
+                println!("Deleted project {}", id);
+            }
+        },
+        Err(err) => panic!("Delete failed: {}", err),
+    };
 }
