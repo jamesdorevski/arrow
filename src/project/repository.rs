@@ -1,7 +1,7 @@
 use chrono::{Local, TimeZone};
 use rusqlite::{Connection, Result};
 
-use crate::project::Project;
+use crate::project::handlers::Project;
 
 pub fn save_project(proj: &Project) -> i64 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");

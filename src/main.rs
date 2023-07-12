@@ -1,8 +1,5 @@
 use clap::{Arg, ArgAction, Command};
 
-mod project;
-mod repository;
-
 fn main() {
     println!("Hello, world!");
 
@@ -33,6 +30,17 @@ fn main() {
                         .action(ArgAction::Set)
                         .value_parser(clap::value_parser!(usize))
                         .help("remove a project"),
+                )
+        )
+        .subcommand(
+            Command::new("start")
+                .about("Start tracking time against a project. Use Ctrl+C to stop")
+                .arg(
+                    Arg::new("project")
+                        .short('p')
+                        .long("project")
+                        .action(ArgAction::Set)
+                        .help("Project to log time against")
                 )
         )
         .get_matches();
