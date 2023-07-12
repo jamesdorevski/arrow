@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local};
+use std::fmt;
 
 use crate::repository::{self};
 
@@ -35,6 +36,25 @@ impl std::fmt::Display for Project {
     }
 }
 
+struct ListPadding {
+    id: usize,
+    name: usize,
+    created: usize,
+    updated: usize,
+
+}
+
+impl ListPadding {
+    pub fn default_padding(max_name: usize) -> Self {
+        ListPadding {
+            id: 4,
+            name: max_name,
+            created: 26,
+            updated: 26
+        }
+    }
+}
+
 pub fn add(name: String) {
     let mut new_proj = Project::new(0, name, Local::now(), Local::now());
     new_proj.id = repository::save_project(&new_proj);
@@ -45,14 +65,44 @@ pub fn add(name: String) {
 pub fn list() {
     // get all projects from the db
     let projs = repository::get_projects().expect("Error retrieving projects");
-    // foreach print
 
-    println!("ID    NAME    CREATED     UPDATED");
+    let names: Vec<String> = projs
+        .iter()
+        .map(|proj| proj.name.to_string())
+        .collect();
+    
+    let max_name_len = max_str_len(names);
+    let padding = ListPadding::default_padding(max_name_len);
+    
+    print_table(padding, projs);
+}
+
+fn max_str_len(input: Vec<String>) -> usize {
+    let mut max_len = 0usize;
+    for s in input {
+        let len = s.len();
+
+        if len > max_len {
+            max_len = len;
+        }
+    }
+
+    max_len
+}
+
+fn print_table(padding: ListPadding, projs: Vec<Project>) {
+    println!(
+        "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
+        "ID", "NAME", "CREATED", "UPDATED",
+        width_id = padding.id, width_name = padding.name, width_created = padding.created, width_updated = padding.updated
+    );
 
     for proj in &projs {
-        println!(
-            "{:<4}  {:<4}   {:<19}  {:<19}",
-            &proj.id, &proj.name, &proj.created, &proj.updated
-        );
-    }
+            println!(
+                "{:<width_id$} {:<width_name$} {:<width_created$} {:<width_updated$}",
+                &proj.id, &proj.name, &proj.created, &proj.updated,
+                width_id = padding.id, width_name = padding.name, width_created = padding.created, width_updated = padding.updated
+            );
+        }
 }
+
