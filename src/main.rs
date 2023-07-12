@@ -1,5 +1,9 @@
 use clap::{Arg, ArgAction, Command};
 
+mod project;
+
+use crate::project::handlers;
+
 fn main() {
     println!("Hello, world!");
 
@@ -48,15 +52,15 @@ fn main() {
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
             if sub_matches.get_flag("list") {
-                project::list();
+                handlers::list();
             }
 
             if let Some(name) = sub_matches.get_one::<String>("add") {
-                project::add(name.to_string());
+                handlers::add(name.to_string());
             }
 
             if let Some(id) = sub_matches.get_one::<usize>("rm") {
-                project::delete(id);
+                handlers::delete(id);
             }
 
         }

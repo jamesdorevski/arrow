@@ -1,6 +1,6 @@
 use chrono::{DateTime, Local};
 
-use crate::repository::{self};
+use crate::project::repository;
 
 pub struct Project {
     pub id: i64,
