@@ -1,6 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 
 mod project;
+mod log;
 
 use crate::project::handlers;
 
@@ -46,6 +47,13 @@ fn main() {
                         .action(ArgAction::Set)
                         .help("Project to log time against")
                 )
+                .arg(
+                    Arg::new("description")
+                        .short('d')
+                        .long("description")
+                        .action(ArgAction::Set)
+                        .help("Log description")
+                )
         )
         .get_matches();
 
@@ -63,7 +71,12 @@ fn main() {
                 handlers::delete(id);
             }
 
-        }
+        },
+        Some(("start", sub_matches)) => {
+            // get project using project id 
+            log::handlers::start_logging("DEBUG".to_string());
+            // if it doesn't exist, create it 
+        },
         _ => unreachable!("Exhausted list of subcommands"),
     }
 }
