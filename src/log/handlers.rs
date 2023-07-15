@@ -1,14 +1,38 @@
-use chrono::{DateTime, Local, Duration};
-use std::{thread, time};
+use chrono::{DateTime, Duration, Local};
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use crate::log::*;
+
 pub struct Log {
-    id: usize,
-    description: String,
-    start: DateTime<Local>,
-    end: DateTime<Local>,
-    duration: Duration
+    pub id: i64,
+    pub description: String,
+    pub start: DateTime<Local>,
+    pub end: DateTime<Local>,
+    pub duration: Duration,
+}
+
+impl Log {
+    pub fn new(id: i64, description: String, start: DateTime<Local>, end: DateTime<Local>) -> Self {
+        Log {
+            id, // db-generated
+            description,
+            start,
+            end,
+            duration: end - start,
+        }
+    }
+}
+
+impl fmt::Display for Log {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Id: {}, Descrip: {}, Start: {}, End: {}, Duration: {}",
+            self.id, self.description, self.start, self.end, self.duration
+        )
+    }
 }
 
 pub fn start_logging(description: String) {
@@ -25,12 +49,16 @@ pub fn start_logging(description: String) {
     let start = Local::now();
     println!("Started log at {}", start);
 
-    // hold thread until ctrl c is pressed 
+    // hold thread until ctrl c is pressed
     while !interrupted.load(Ordering::SeqCst) {}
 
     let end = Local::now();
     println!("Finished log at {}", end);
-    // get end timestamp 
+    // get end timestamp
+    let mut log = Log::new(0, description, start, end);
+    log.id = repository::save(3, &log);
+
+    println!("Created log {}", log);
     // get diff
     // save to db
     // done6

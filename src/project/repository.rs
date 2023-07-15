@@ -71,3 +71,21 @@ pub fn delete_project(id: &usize) {
         Err(err) => panic!("Delete failed: {}", err),
     };
 }
+
+pub fn get_project(id: i64) -> Result<Project> {
+    let conn = Connection::open("arrow.db").expect("Failed to open db");
+    
+    let mut stmt = conn.prepare(
+        "SELECT id, name, created, updated
+        FROM projects
+        WHERE id = ?1"
+    )?;
+    
+
+    let mut rows = stmt.query_row([id], |row| {
+        row
+    })?;
+    
+}
+
+
