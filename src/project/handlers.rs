@@ -1,8 +1,6 @@
 use chrono::{DateTime, Local};
 
-use crate::project::repository;
-
-pub struct Project {
+use crate::project::repository; pub struct Project {
     pub id: i64,
     pub name: String,
     pub created: DateTime<Local>,
@@ -72,6 +70,15 @@ pub fn list() {
 
 pub fn delete(id: &usize) {
     repository::delete_project(id);
+}
+
+pub fn get(id: i64) {
+    // get project from db
+    let proj = repository::get_project(id);
+
+    // get logs from db
+//
+    // print it all 
 }
 
 fn max_str_len(input: Vec<String>) -> usize {

@@ -38,3 +38,8 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
     conn.last_insert_rowid()
 }
 
+pub fn get_from_project(project_id: i64) -> Vec<Log> {
+    let conn = Connection::open("arrow.db").expect("Failed to open db");
+    
+    
+}

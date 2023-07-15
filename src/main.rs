@@ -1,4 +1,4 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, Command, arg};
 
 mod project;
 mod log;
@@ -36,6 +36,7 @@ fn main() {
                         .value_parser(clap::value_parser!(usize))
                         .help("remove a project"),
                 )
+                .arg(arg!([name] "Get project logs"))
         )
         .subcommand(
             Command::new("start")
@@ -69,6 +70,10 @@ fn main() {
 
             if let Some(id) = sub_matches.get_one::<usize>("rm") {
                 handlers::delete(id);
+            }
+
+            if let Some(name) = sub_matches.get_one::<String>("name") {
+                println!("Name entered!: {}", name);
             }
 
         },
