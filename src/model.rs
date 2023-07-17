@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration, Local};
-use std::fmt;
+use std::{fmt};
+
 
 pub struct Project {
     pub id: i64,
@@ -36,6 +37,7 @@ impl std::fmt::Display for Project {
 
 pub struct Log {
     pub id: i64,
+    pub proj_id: i64,
     pub description: String,
     pub start: DateTime<Local>,
     pub end: DateTime<Local>,
@@ -43,13 +45,19 @@ pub struct Log {
 }
 
 impl Log {
-    pub fn new(id: i64, description: String, start: DateTime<Local>, end: DateTime<Local>) -> Self {
+    pub fn new(id: i64, proj_id: i64, description: String, start: DateTime<Local>, end: DateTime<Local>, duration: Option<i64>) -> Self {
+        let duration = match duration {
+            Some(val) => Duration::seconds(val),
+            None => Duration::seconds(end.timestamp() - start.timestamp()),
+        };
+
         Log {
             id, // db-generated
+            proj_id,
             description,
             start,
             end,
-            duration: end - start,
+            duration,
         }
     }
 }

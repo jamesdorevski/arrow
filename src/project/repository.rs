@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Result};
 
-use crate::project::handlers::Project;
+use crate::model::{Project, Log};
 
 pub fn save_project(proj: &Project) -> i64 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
@@ -85,6 +85,28 @@ pub fn get_project(id: i64) -> Result<Project> {
     })?;
 
     Ok(proj)
+}
+
+pub fn get_project_logs(proj_id: i64) -> Result<Vec<Log>> {
+    let conn = Connection::open("arrow.db").expect("Failed to open db");
+
+    let mut stmt = conn.prepare(
+        "SELECT id, description, start, end, duration
+        FROM logs
+        WHERE project_id = ?1"
+    )?;
+
+    let mut rows = stmt.query([proj_id])?;
+    
+    let mut logs: Vec<Log> = Vec::new();
+    while let Some(row) = rows.next()? {
+        let start = to_datetime(row.get(2)?);
+        let end = to_datetime(row.get(3)?);
+
+        logs.push(Log::new(row.get(0)?, proj_id, row.get(1)?, start, end, row.get(4)?));
+    }
+
+    Ok(logs)
 }
 
 fn to_datetime(timestamp: i64) -> DateTime<Local> {

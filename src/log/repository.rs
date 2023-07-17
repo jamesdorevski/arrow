@@ -1,6 +1,6 @@
 use rusqlite::{params, Connection};
 
-use crate::log::handlers::Log;
+use crate::model::Log;
 
 pub fn save(project_id: usize, log: &Log) -> i64 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
@@ -18,7 +18,7 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )",
         (),
-    );
+    ).expect("Failed to execute query");
 
     conn.execute("PRAGMA foreign_keys = ON", ())
         .expect("Failed to enable foreign keys");
@@ -39,6 +39,3 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
     conn.last_insert_rowid()
 }
 
-pub fn get_from_project(project_id: i64) -> Vec<Log> {
-    let conn = Connection::open("arrow.db").expect("Failed to open db");
-}

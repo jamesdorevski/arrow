@@ -1,6 +1,6 @@
+use arrow::project;
+use arrow::log;
 use clap::{arg, Arg, ArgAction, Command};
-
-use crate::project::handlers;
 
 fn main() {
     println!("Hello, world!");
@@ -58,19 +58,20 @@ fn main() {
     match matches.subcommand() {
         Some(("project", sub_matches)) => {
             if sub_matches.get_flag("list") {
-                handlers::list();
+                project::handlers::list();
             }
 
             if let Some(name) = sub_matches.get_one::<String>("add") {
-                handlers::add(name.to_string());
+                project::handlers::add(name.to_string());
             }
 
             if let Some(id) = sub_matches.get_one::<usize>("rm") {
-                handlers::delete(id);
+                project::handlers::delete(id);
             }
 
             if let Some(name) = sub_matches.get_one::<String>("name") {
                 println!("Name entered!: {}", name);
+                project::handlers::get(3);
             }
         }
         Some(("start", sub_matches)) => {

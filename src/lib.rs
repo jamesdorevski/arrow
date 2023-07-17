@@ -1,3 +1,3 @@
-mod log;
-mod model;
-mod project;
+pub mod project;
+pub mod log;
+pub mod model;

@@ -1,39 +1,9 @@
-use chrono::{DateTime, Duration, Local};
-use std::fmt;
+use chrono::Local;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use crate::log::*;
-
-pub struct Log {
-    pub id: i64,
-    pub description: String,
-    pub start: DateTime<Local>,
-    pub end: DateTime<Local>,
-    pub duration: Duration,
-}
-
-impl Log {
-    pub fn new(id: i64, description: String, start: DateTime<Local>, end: DateTime<Local>) -> Self {
-        Log {
-            id, // db-generated
-            description,
-            start,
-            end,
-            duration: end - start,
-        }
-    }
-}
-
-impl fmt::Display for Log {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Id: {}, Descrip: {}, Start: {}, End: {}, Duration: {}",
-            self.id, self.description, self.start, self.end, self.duration
-        )
-    }
-}
+use crate::log::repository;
+use crate::model::Log;
 
 pub fn start_logging(description: String) {
     let interrupted = Arc::new(AtomicBool::new(false));
@@ -55,8 +25,8 @@ pub fn start_logging(description: String) {
     let end = Local::now();
     println!("Finished log at {}", end);
     // get end timestamp
-    let mut log = Log::new(0, description, start, end);
-    log.id = repository::save(3, &log);
+    let mut log = Log::new(0, 3, description, start, end, None);
+    log.id = repository::save(0, &log);
 
     println!("Created log {}", log);
     // get diff
