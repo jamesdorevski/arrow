@@ -1,7 +1,4 @@
-use clap::{Arg, ArgAction, Command, arg};
-
-mod project;
-mod log;
+use clap::{arg, Arg, ArgAction, Command};
 
 use crate::project::handlers;
 
@@ -36,7 +33,7 @@ fn main() {
                         .value_parser(clap::value_parser!(usize))
                         .help("remove a project"),
                 )
-                .arg(arg!([name] "Get project logs"))
+                .arg(arg!([name] "Get project logs")),
         )
         .subcommand(
             Command::new("start")
@@ -46,15 +43,15 @@ fn main() {
                         .short('p')
                         .long("project")
                         .action(ArgAction::Set)
-                        .help("Project to log time against")
+                        .help("Project to log time against"),
                 )
                 .arg(
                     Arg::new("description")
                         .short('d')
                         .long("description")
                         .action(ArgAction::Set)
-                        .help("Log description")
-                )
+                        .help("Log description"),
+                ),
         )
         .get_matches();
 
@@ -75,13 +72,12 @@ fn main() {
             if let Some(name) = sub_matches.get_one::<String>("name") {
                 println!("Name entered!: {}", name);
             }
-
-        },
+        }
         Some(("start", sub_matches)) => {
-            // get project using project id 
+            // get project using project id
             log::handlers::start_logging("DEBUG".to_string());
-            // if it doesn't exist, create it 
-        },
+            // if it doesn't exist, create it
+        }
         _ => unreachable!("Exhausted list of subcommands"),
     }
 }

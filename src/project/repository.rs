@@ -1,4 +1,4 @@
-use chrono::{Local, TimeZone, DateTime};
+use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Result};
 
 use crate::project::handlers::Project;
@@ -56,22 +56,25 @@ pub fn delete_project(id: &usize) {
     match conn.execute("DELETE FROM projects WHERE id = ?1", &[id]) {
         Ok(rows) => {
             if rows < 1 {
-                eprintln!("No project with id {} exists. Please specify an existing project.", id);
+                eprintln!(
+                    "No project with id {} exists. Please specify an existing project.",
+                    id
+                );
             } else {
                 println!("Deleted project {}", id);
             }
-        },
+        }
         Err(err) => panic!("Delete failed: {}", err),
     };
 }
 
 pub fn get_project(id: i64) -> Result<Project> {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
-    
+
     let mut stmt = conn.prepare(
         "SELECT id, name, created, updated
         FROM projects
-        WHERE id = ?1"
+        WHERE id = ?1",
     )?;
 
     let proj = stmt.query_row([id], |row| {
@@ -80,7 +83,7 @@ pub fn get_project(id: i64) -> Result<Project> {
 
         Ok(Project::new(row.get(0)?, row.get(1)?, created, updated))
     })?;
-    
+
     Ok(proj)
 }
 

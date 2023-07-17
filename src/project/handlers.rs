@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 
-use crate::project::repository; pub struct Project {
+use crate::project::repository;
+pub struct Project {
     pub id: i64,
     pub name: String,
     pub created: DateTime<Local>,
@@ -60,10 +61,10 @@ pub fn add(name: String) {
 
 pub fn list() {
     let projs = repository::get_projects().expect("Error retrieving projects");
-    
+
     let names: Vec<String> = projs.iter().map(|proj| proj.name.to_string()).collect();
     let max_name_len = max_str_len(names);
- 
+
     let padding = TablePadding::default_padding(max_name_len);
     print_table(padding, projs);
 }
@@ -77,8 +78,8 @@ pub fn get(id: i64) {
     let proj = repository::get_project(id);
 
     // get logs from db
-//
-    // print it all 
+    //
+    // print it all
 }
 
 fn max_str_len(input: Vec<String>) -> usize {

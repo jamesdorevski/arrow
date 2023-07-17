@@ -1,11 +1,11 @@
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 
 use crate::log::handlers::Log;
 
 pub fn save(project_id: usize, log: &Log) -> i64 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
-    
-    // TODO: convert into migration step. Store a local bool somewhere? 
+
+    // TODO: convert into migration step. Store a local bool somewhere?
     conn.execute(
         "CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY,
@@ -19,8 +19,9 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
         )",
         (),
     );
-    
-    conn.execute("PRAGMA foreign_keys = ON", ()).expect("Failed to enable foreign keys");
+
+    conn.execute("PRAGMA foreign_keys = ON", ())
+        .expect("Failed to enable foreign keys");
 
     conn.execute(
         "INSERT INTO logs (project_id, description, start, end, duration)
@@ -40,6 +41,4 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
 
 pub fn get_from_project(project_id: i64) -> Vec<Log> {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
-    
-    
 }
