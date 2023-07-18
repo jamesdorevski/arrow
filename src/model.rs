@@ -1,6 +1,5 @@
 use chrono::{DateTime, Duration, Local};
-use std::{fmt};
-
+use std::fmt;
 
 pub struct Project {
     pub id: i64,
@@ -45,7 +44,14 @@ pub struct Log {
 }
 
 impl Log {
-    pub fn new(id: i64, proj_id: i64, description: String, start: DateTime<Local>, end: DateTime<Local>, duration: Option<i64>) -> Self {
+    pub fn new(
+        id: i64,
+        proj_id: i64,
+        description: String,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
+        duration: Option<i64>,
+    ) -> Self {
         let duration = match duration {
             Some(val) => Duration::seconds(val),
             None => Duration::seconds(end.timestamp() - start.timestamp()),

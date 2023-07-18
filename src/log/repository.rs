@@ -18,7 +18,8 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
             FOREIGN KEY (project_id) REFERENCES projects(id)
         )",
         (),
-    ).expect("Failed to execute query");
+    )
+    .expect("Failed to execute query");
 
     conn.execute("PRAGMA foreign_keys = ON", ())
         .expect("Failed to enable foreign keys");
@@ -38,4 +39,3 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
 
     conn.last_insert_rowid()
 }
-

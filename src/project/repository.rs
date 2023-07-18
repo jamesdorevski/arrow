@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Result};
 
-use crate::model::{Project, Log};
+use crate::model::{Log, Project};
 
 pub fn save_project(proj: &Project) -> i64 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
@@ -50,7 +50,7 @@ pub fn get_projects() -> Result<Vec<Project>> {
     Ok(projs)
 }
 
-pub fn delete_project(id: &usize) {
+pub fn remove_proj(id: &i64) {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
 
     match conn.execute("DELETE FROM projects WHERE id = ?1", &[id]) {
@@ -93,17 +93,24 @@ pub fn get_project_logs(proj_id: i64) -> Result<Vec<Log>> {
     let mut stmt = conn.prepare(
         "SELECT id, description, start, end, duration
         FROM logs
-        WHERE project_id = ?1"
+        WHERE project_id = ?1",
     )?;
 
     let mut rows = stmt.query([proj_id])?;
-    
+
     let mut logs: Vec<Log> = Vec::new();
     while let Some(row) = rows.next()? {
         let start = to_datetime(row.get(2)?);
         let end = to_datetime(row.get(3)?);
 
-        logs.push(Log::new(row.get(0)?, proj_id, row.get(1)?, start, end, row.get(4)?));
+        logs.push(Log::new(
+            row.get(0)?,
+            proj_id,
+            row.get(1)?,
+            start,
+            end,
+            row.get(4)?,
+        ));
     }
 
     Ok(logs)
