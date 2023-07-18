@@ -26,7 +26,7 @@ pub fn remove(id: &i64) {
     repository::remove_proj(id);
 }
 
-pub fn get(id: i64) {
+pub fn get(id: &i64) {
     // TODO: use anyway library to improve error msgs
     let proj = repository::get_project(id).expect("Error retrieving proj");
     let logs = repository::get_project_logs(id).expect("Error retrieving logs");
