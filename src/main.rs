@@ -1,30 +1,13 @@
-use arrow::project;
-use arrow::log;
-use clap::{arg, Arg, ArgAction, Command, Parser, Subcommand};
+use clap::Parser;
+
+use arrow::project::command::{ProjectCmds, ProjectSubCmds};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    // Add, view or remove your projects
-    Project {
-        #[command(subcommand)]
-        sub: ProjectSubCmds,
-    }
-}
-
-#[derive(Subcommand)]
-enum ProjectSubCmds {
-    // Create new project
-    Add { name: Option<String> },
-    // List projects 
-    Ls,
+    command: Option<ProjectCmds>,
 }
 
 fn main() {
@@ -109,7 +92,16 @@ fn main() {
     let cli = Cli::parse();  
 
     match &cli.command {
-        Some(Commands::Project { sub }) => {
+        Some(ProjectCmds::Project { name, sub }) => {
+            if let Some(name) = name {
+                println!("Name is: {}", name);
+            } 
+
+            match sub {
+                ProjectSubCmds::Add { name } => println!("Add called!, {}", name),
+                ProjectSubCmds::Rm { id } => println!("Rm called!, {}", id),
+                ProjectSubCmds::Ls => println!("Ls called!"),
+            }
         },
         None => {},
     }
