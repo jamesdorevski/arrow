@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use arrow::project::command::{ProjectCmds, ProjectSubCmds};
+use arrow::project::command::{ProjectCmds, ProjectSubCmds, self};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -92,17 +92,7 @@ fn main() {
     let cli = Cli::parse();  
 
     match &cli.command {
-        Some(ProjectCmds::Project { name, sub }) => {
-            if let Some(name) = name {
-                println!("Name is: {}", name);
-            } 
-
-            match sub {
-                ProjectSubCmds::Add { name } => println!("Add called!, {}", name),
-                ProjectSubCmds::Rm { id } => println!("Rm called!, {}", id),
-                ProjectSubCmds::Ls => println!("Ls called!"),
-            }
-        },
+        Some(cmd) => {command::handle(&cmd)},
         None => {},
     }
 }

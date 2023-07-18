@@ -19,6 +19,20 @@ pub enum ProjectSubCmds {
     Rm { id: i64 },
     // List projects 
     Ls,
+} 
+
+pub fn handle(cmd: &ProjectCmds) {
+    match cmd {
+        ProjectCmds::Project { name, sub } => {
+            if let Some(name) = name {
+                println!("Name is: {}", name);
+            } 
+
+            match sub {
+                ProjectSubCmds::Add { name } => println!("Add called!, {}", name),
+                ProjectSubCmds::Rm { id } => println!("Rm called!, {}", id),
+                ProjectSubCmds::Ls => println!("Ls called!"),
+            }
+        }
+    }
 }
-
-
