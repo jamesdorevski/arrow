@@ -2,8 +2,8 @@ use chrono::Local;
 
 use crate::model::Project;
 
-use super::repository::Repository;
 use super::print::TablePadding;
+use super::repository::Repository;
 
 fn repo_conn() -> Repository {
     Repository::new().expect("Failed to connect to repository!")
@@ -13,7 +13,9 @@ pub fn add(name: &str) {
     let mut new_proj = Project::new(0, name.to_string(), Local::now(), Local::now());
     let repo = repo_conn();
 
-    new_proj.id = repo.save_project(&new_proj).expect("Failed to create new project!");
+    new_proj.id = repo
+        .save_project(&new_proj)
+        .expect("Failed to create new project!");
 
     println!("Created project {}", new_proj);
 }
