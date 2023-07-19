@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, Local};
 use std::fmt;
 
 pub struct Project {
-    pub id: i64,
+    pub id: u32,
     pub name: String,
     pub created: DateTime<Local>,
     pub updated: DateTime<Local>,
@@ -10,7 +10,7 @@ pub struct Project {
 
 impl Project {
     pub fn new(
-        id: i64,
+        id: u32,
         name: String,
         created: DateTime<Local>,
         updated: DateTime<Local>,

@@ -18,6 +18,11 @@ pub enum Cmds {
         id: Option<u32>,
         #[command(subcommand)]
         sub: ProjectSubCmds
+    },
+    // Manage logs
+    Log {
+        #[command(subcommand)]
+        sub: LogSubCmds
     }
 }
 
@@ -31,6 +36,26 @@ pub enum ProjectSubCmds {
     Ls,
 }
 
+#[derive(Subcommand)]
+pub enum LogSubCmds {
+    // Start tracking time. Stops when SIGTERM is receieved
+    Start {
+        // Project to log time for
+        project: String,
+        // Optional description for work achieved
+        message: Option<String>,
+    },
+    // Add a log to a project after the fact. Allows for manual duration input
+    Add {
+        // Project to log time for
+        project: String,
+        // Optional description for work achieved
+        message: Option<String>,
+        // Duration spent on log in minutes (m). Max value is 65535
+        duration: u16,
+    }
+}
+
 pub fn handle(cmd: &Cmds) {
     match cmd {
         Cmds::Project { id, sub } => {
@@ -42,6 +67,12 @@ pub fn handle(cmd: &Cmds) {
                 ProjectSubCmds::Add { name } => handlers::add(name),
                 ProjectSubCmds::Rm { id } => handlers::remove(id),
                 ProjectSubCmds::Ls => handlers::list(),
+            }
+        },
+        Cmds::Log { sub } => {
+            match sub {
+                LogSubCmds::Start { project, message } => println!("Log start called!"),
+                LogSubCmds::Add { project, message, duration } => println!("Log add called!"),
             }
         }
     }

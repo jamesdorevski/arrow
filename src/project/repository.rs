@@ -13,7 +13,7 @@ impl Repository {
         Ok(Repository { conn })
     }
 
-    pub fn save_project(&self, proj: &Project) -> Result<i64> {
+    pub fn save_project(&self, proj: &Project) -> Result<u32> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY,
@@ -33,7 +33,7 @@ impl Repository {
             ],
         )?;
 
-        Ok(self.conn.last_insert_rowid())
+        Ok(self.conn.last_insert_rowid() as u32)
     }
 
     pub fn remove_project(&self, id: &u32) {
