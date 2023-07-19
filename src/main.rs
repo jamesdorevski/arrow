@@ -1,8 +1,12 @@
-fn main() {
-   let cli = Cli::parse();
+use clap::Parser;
 
-    match &cli.project_cmd {
-        Some(cmd) => command::handle(&cmd),
+use arrow::cli::*;
+
+fn main() {
+    let cli = Cli::parse();
+
+    match &cli.cmd {
+        Some(cmd) => handle(&cmd),
         None => {}
     }
 }

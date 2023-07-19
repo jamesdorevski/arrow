@@ -5,11 +5,10 @@ use std::sync::Arc;
 use crate::log::repository;
 use crate::model::Log;
 
-pub fn start_logging(description: String) {
+pub fn start_logging(proj_id: &u32, description: String) {
     let interrupted = Arc::new(AtomicBool::new(false));
     let interrupted_clone = interrupted.clone();
 
-    // grab current timestamp
     ctrlc::set_handler(move || {
         println!("received Ctrl+C!");
         interrupted_clone.store(true, Ordering::SeqCst);
@@ -24,12 +23,9 @@ pub fn start_logging(description: String) {
 
     let end = Local::now();
     println!("Finished log at {}", end);
-    // get end timestamp
-    let mut log = Log::new(0, 3, description, start, end, None);
-    log.id = repository::save(0, &log);
+
+    let mut log = Log::new(0, *proj_id, description, start, end, None);
+    log.id = repository::save(proj_id, &log);
 
     println!("Created log {}", log);
-    // get diff
-    // save to db
-    // done6
 }

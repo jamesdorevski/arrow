@@ -2,7 +2,7 @@ use rusqlite::{params, Connection};
 
 use crate::model::Log;
 
-pub fn save(project_id: usize, log: &Log) -> i64 {
+pub fn save(project_id: &u32, log: &Log) -> u32 {
     let conn = Connection::open("arrow.db").expect("Failed to open db");
 
     // TODO: convert into migration step. Store a local bool somewhere?
@@ -37,5 +37,5 @@ pub fn save(project_id: usize, log: &Log) -> i64 {
     )
     .expect("Failed to add new log!");
 
-    conn.last_insert_rowid()
+    conn.last_insert_rowid() as u32
 }

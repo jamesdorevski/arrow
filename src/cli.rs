@@ -5,9 +5,9 @@ use crate::project::handlers;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
-    cmd: Option<Cmds>,
+    pub cmd: Option<Cmds>,
 }
 
 #[derive(Subcommand)]
