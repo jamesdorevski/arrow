@@ -2,12 +2,14 @@ use chrono::Local;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use crate::log::repository;
+use super::repository::Repository;
+
 use crate::model::Log;
 
-pub fn start_logging(proj_id: &u32, description: String) {
+pub fn start_logging(proj_id: &u32, description: String) -> Log {
     let interrupted = Arc::new(AtomicBool::new(false));
     let interrupted_clone = interrupted.clone();
+    let repo = Repository::new();
 
     ctrlc::set_handler(move || {
         println!("received Ctrl+C!");
@@ -24,13 +26,19 @@ pub fn start_logging(proj_id: &u32, description: String) {
     let end = Local::now();
     println!("Finished log at {}", end);
 
-    let mut log = Log::new(0, *proj_id, description, start, end, None);
-    log.id = repository::save(proj_id, &log);
+    let mut log = Log::new(None, *proj_id, description, start, end, None);
+    log.id = Some(repo.save_log(&log).expect("Failed to save log!"));
 
     println!("Created log {}", log);
+    log
 }
 
 pub fn save_log(proj_id: &u32, msg: String, dur: u32) -> Log {
-   let mut log = Log::new_no_timestamp(None, *proj_id, msg, dur as i64);
-   log.id = repository::save()
+    let repo = Repository::new();
+
+    let mut log = Log::new_no_timestamp(None, *proj_id, msg, dur as i64);
+    log.id = Some(repo.save_log(&log).expect("Failed to save log!"));
+    
+    println!("Added log {}", log);
+    log
 }

@@ -7,9 +7,9 @@ pub struct Repository {
 }
 
 impl Repository {
-    pub fn new() -> Result<Self, rusqlite::Error> {
-        let conn = Connection::open("arrow.db")?;
-        Ok(Repository { conn })
+    pub fn new() -> Self {
+        let conn = Connection::open("arrow.db").expect("Failed to connect to repository!");
+        Repository { conn }
     }
 
     pub fn save_log(&self, log: &Log) -> Result<u32> {
