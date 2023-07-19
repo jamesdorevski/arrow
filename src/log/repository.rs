@@ -47,6 +47,26 @@ impl Repository {
 
         Ok(self.conn.last_insert_rowid() as u32)
     }
+
+    // TODO: duplicate code with remove_project
+    pub fn remove_log(&self, proj_id: &u32, log_id: &u32) {
+        match self
+            .conn
+            .execute("DELETE FROM logs WHERE project_id = ?1 AND id = ?2", &[proj_id, log_id])
+        {
+            Ok(rows) => {
+                if rows < 1 {
+                    eprintln!(
+                        "No log with project ID {} and ID {} exists. Please specify an existing log.",
+                        proj_id, log_id
+                    );
+                } else {
+                    println!("Deleted log {} from project {}", log_id, proj_id);
+                }
+            },
+            Err(err) => panic!("Delete failed!: {}", err),
+        };
+    }
 }
 
 fn sql_value_or_null<T: ToSql>(arg: Option<T>) -> Box<dyn ToSql> {

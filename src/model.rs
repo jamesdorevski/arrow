@@ -98,7 +98,7 @@ impl fmt::Display for Log {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Id: {}, Descrip: {}, Start: {}, End: {}, Duration: {}",
+            "Id: {}, Description: {}, Start: {}, End: {}, Duration: {}",
             self.id, self.description, self.start, self.end, self.duration
         )
     }

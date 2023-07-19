@@ -6,7 +6,7 @@ use super::repository::Repository;
 
 use crate::model::Log;
 
-pub fn start_logging(proj_id: &u32, msg: Option<String>) -> Log {
+pub fn start_logging(proj_id: &u32, msg: Option<String>) -> Option<Log> {
     let interrupted = Arc::new(AtomicBool::new(false));
     let interrupted_clone = interrupted.clone();
     let repo = Repository::new();
@@ -30,15 +30,21 @@ pub fn start_logging(proj_id: &u32, msg: Option<String>) -> Log {
     log.id = Some(repo.save_log(&log).expect("Failed to save log!"));
 
     println!("Created log {}", log);
-    log
+    Some(log)
 }
 
-pub fn save_log(proj_id: &u32, msg: Option<String>, dur: &u16) -> Log {
+pub fn save_log(proj_id: &u32, msg: Option<String>, dur: &u16) -> Option<Log> {
     let repo = Repository::new();
 
     let mut log = Log::new_no_timestamp(None, *proj_id, msg, *dur as i64);
     log.id = Some(repo.save_log(&log).expect("Failed to save log!"));
     
     println!("Added log {}", log);
-    log
+    Some(log)
+}
+
+pub fn remove_log(proj_id: &u32, log_id: &u32) -> Option<Log> {
+    let repo = Repository::new();
+    repo.remove_log(proj_id, log_id);
+    None
 }

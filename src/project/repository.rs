@@ -35,7 +35,8 @@ impl Repository {
 
         Ok(self.conn.last_insert_rowid() as u32)
     }
-
+    
+    // TODO: handle foreign key violation when logs exist
     pub fn remove_project(&self, id: &u32) {
         match self
             .conn

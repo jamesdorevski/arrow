@@ -54,6 +54,13 @@ pub enum LogSubCmds {
         message: Option<String>,
         // Duration spent on log in minutes (m). Max value is 65535
         duration: u16,
+    },
+    // Remove log from a project
+    Rm {
+        // Project to remove log for
+        project: u32,
+        // Id of log to remove
+        log: u32,
     }
 }
 
@@ -74,6 +81,7 @@ pub fn handle(cmd: &Cmds) {
             match sub {
                 LogSubCmds::Start { project, message } => log::handlers::start_logging(project, message.clone()),
                 LogSubCmds::Add { project, message, duration } => log::handlers::save_log(project, message.clone(), duration),
+                LogSubCmds::Rm { project, log } => log::handlers::remove_log(project, log),
             };
         }
     }
