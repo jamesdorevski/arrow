@@ -13,7 +13,7 @@ impl Repository {
         Ok(Repository { conn })
     }
 
-    pub fn save_proj(&self, proj: &Project) -> Result<i64> {
+    pub fn save_project(&self, proj: &Project) -> Result<i64> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY,
@@ -36,7 +36,7 @@ impl Repository {
         Ok(self.conn.last_insert_rowid())
     }
 
-    pub fn remove_proj(&self, id: &i64) {
+    pub fn remove_project(&self, id: &i64) {
         match self
             .conn
             .execute("DELETE FROM projects WHERE id = ?1", &[id])
