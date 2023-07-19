@@ -29,3 +29,8 @@ pub fn start_logging(proj_id: &u32, description: String) {
 
     println!("Created log {}", log);
 }
+
+pub fn save_log(proj_id: &u32, msg: String, dur: u32) -> Log {
+   let mut log = Log::new_no_timestamp(None, *proj_id, msg, dur as i64);
+   log.id = repository::save()
+}
