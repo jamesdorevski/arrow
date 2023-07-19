@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
-use crate::project::handlers;
+use crate::project;
+use crate::log;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -41,14 +42,14 @@ pub enum LogSubCmds {
     // Start tracking time. Stops when SIGTERM is receieved
     Start {
         // Project to log time for
-        project: String,
+        project: u32,
         // Optional description for work achieved
         message: Option<String>,
     },
     // Add a log to a project after the fact. Allows for manual duration input
     Add {
         // Project to log time for
-        project: String,
+        project: u32,
         // Optional description for work achieved
         message: Option<String>,
         // Duration spent on log in minutes (m). Max value is 65535
@@ -60,20 +61,20 @@ pub fn handle(cmd: &Cmds) {
     match cmd {
         Cmds::Project { id, sub } => {
             if let Some(id) = id {
-                handlers::get(id)
+                project::handlers::get(id)
             }
 
             match sub {
-                ProjectSubCmds::Add { name } => handlers::add(name),
-                ProjectSubCmds::Rm { id } => handlers::remove(id),
-                ProjectSubCmds::Ls => handlers::list(),
+                ProjectSubCmds::Add { name } => project::handlers::add(name),
+                ProjectSubCmds::Rm { id } => project::handlers::remove(id),
+                ProjectSubCmds::Ls => project::handlers::list(),
             }
         },
         Cmds::Log { sub } => {
             match sub {
-                LogSubCmds::Start { project, message } => println!("Log start called!"),
-                LogSubCmds::Add { project, message, duration } => println!("Log add called!"),
-            }
+                LogSubCmds::Start { project, message } => log::handlers::start_logging(project, message.clone()),
+                LogSubCmds::Add { project, message, duration } => log::handlers::save_log(project, message.clone(), duration),
+            };
         }
     }
 }

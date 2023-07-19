@@ -13,6 +13,7 @@ impl Repository {
     }
 
     pub fn save_log(&self, log: &Log) -> Result<u32> {
+        let message: Box <dyn ToSql> = sql_value_or_null(log.message);
         let start_timestmp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp()); 
         let end_timestmp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp()); 
 
@@ -20,7 +21,7 @@ impl Repository {
             "CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY,
                 project_id INTEGER NOT NULL, 
-                description TEXT NOT NULL,
+                message TEXT NOT NULL,
                 start INTEGER NOT NULL,
                 end INTEGER NOT NULL,
                 duration INTEGER NOT NULL,
@@ -33,11 +34,11 @@ impl Repository {
         self.conn.execute("PRAGMA foreign_keys = ON", ())?;
 
         self.conn.execute(
-            "INSERT INTO logs (project_id, description, start, end, duration)
+            "INSERT INTO logs (project_id, message, start, end, duration)
             VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 &log.proj_id,
-                &log.description,
+                &message,
                 &start_timestmp,
                 &end_timestmp,
                 &log.duration.num_seconds(),

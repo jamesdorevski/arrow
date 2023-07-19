@@ -37,7 +37,7 @@ impl std::fmt::Display for Project {
 pub struct Log {
     pub id: Option<u32>,
     pub proj_id: u32,
-    pub description: String,
+    pub message: Option<String>,
     pub start: Option<DateTime<Local>>,
     pub end: Option<DateTime<Local>>,
     pub duration: Duration,
@@ -47,7 +47,7 @@ impl Log {
     pub fn new(
         id: Option<u32>,
         proj_id: u32,
-        description: String,
+        message: Option<String>,
         start: DateTime<Local>,
         end: DateTime<Local>,
         duration: Option<i64>,
@@ -60,7 +60,7 @@ impl Log {
         Log {
             id, // db-generated
             proj_id,
-            description,
+            message,
             start: Some(start),
             end: Some(end),
             duration,
@@ -70,7 +70,7 @@ impl Log {
     pub fn new_no_timestamp(
         id: Option<u32>,
         proj_id: u32,
-        message: String,
+        message: Option<String>,
         duration_mins: i64,
     ) -> Self {
         let duration = Duration::minutes(duration_mins);
@@ -78,7 +78,7 @@ impl Log {
         Log {
             id,
             proj_id,
-            description: message,
+            message,
             start: None,
             end: None,
             duration
