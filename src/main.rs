@@ -1,13 +1,23 @@
 use clap::Parser;
 
-use arrow::project::command::{self, ProjectCmds, ProjectSubCmds};
+use arrow::project::command::{self, ProjectCmds};
 
-#[derive(Parser)]
+#[#[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<ProjectCmds>,
+    project_cmd: Option<ProjectCmds>,
+    #[command(subcommand)]
+    log_cmd: Option<LogCmds>,
+}derive(Parser)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    project_cmd: Option<ProjectCmds>,
+    #[command(subcommand)]
+    log_cmd: Option<LogCmds>,
 }
 
 fn main() {
@@ -91,7 +101,7 @@ fn main() {
     //    }
     let cli = Cli::parse();
 
-    match &cli.command {
+    match &cli.project_cmd {
         Some(cmd) => command::handle(&cmd),
         None => {}
     }

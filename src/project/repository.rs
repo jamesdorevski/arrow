@@ -36,7 +36,7 @@ impl Repository {
         Ok(self.conn.last_insert_rowid())
     }
 
-    pub fn remove_project(&self, id: &i64) {
+    pub fn remove_project(&self, id: &u32) {
         match self
             .conn
             .execute("DELETE FROM projects WHERE id = ?1", &[id])
@@ -73,7 +73,7 @@ impl Repository {
         Ok(projs)
     }
 
-    pub fn get_project(&self, id: &i64) -> Result<Project> {
+    pub fn get_project(&self, id: &u32) -> Result<Project> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, created, updated
             FROM projects
@@ -90,7 +90,7 @@ impl Repository {
         Ok(proj)
     }
 
-    pub fn get_project_logs(&self, proj_id: &i64) -> Result<Vec<Log>> {
+    pub fn get_project_logs(&self, proj_id: &u32) -> Result<Vec<Log>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, description, start, end, duration
             FROM logs

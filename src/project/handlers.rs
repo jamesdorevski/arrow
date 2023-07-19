@@ -31,12 +31,12 @@ pub fn list() {
     super::print::print_table(padding, projs);
 }
 
-pub fn remove(id: &i64) {
+pub fn remove(id: &u32) {
     let repo = repo_conn();
     repo.remove_project(id);
 }
 
-pub fn get(id: &i64) {
+pub fn get(id: &u32) {
     let conn = repo_conn();
 
     // TODO: use anyway library to improve error msgs

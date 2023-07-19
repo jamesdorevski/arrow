@@ -35,8 +35,8 @@ impl std::fmt::Display for Project {
 }
 
 pub struct Log {
-    pub id: i64,
-    pub proj_id: i64,
+    pub id: u32,
+    pub proj_id: u32,
     pub description: String,
     pub start: DateTime<Local>,
     pub end: DateTime<Local>,
@@ -45,8 +45,8 @@ pub struct Log {
 
 impl Log {
     pub fn new(
-        id: i64,
-        proj_id: i64,
+        id: u32,
+        proj_id: u32,
         description: String,
         start: DateTime<Local>,
         end: DateTime<Local>,
