@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::{Local, Duration};
 
 use crate::model::Project;
 
@@ -48,6 +48,12 @@ pub fn get(id: &u32) {
     for l in logs {
         println!("{}", l);
     }
+}
+
+// TODO: shouldn't this return an Option? 
+fn calculate_total_duration(id: &u32) -> Duration {
+    let conn = repo_conn();
+    conn.get_total_duration(id).expect("Failed to get total duration")
 }
 
 fn max_str_len(input: Vec<String>) -> usize {

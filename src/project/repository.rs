@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone, Duration};
 use rusqlite::{Connection, Result};
 
 use crate::model::{Log, Project};
@@ -116,6 +116,18 @@ impl Repository {
         }
 
         Ok(logs)
+    }
+
+    pub fn get_total_duration(&self, id: &u32) -> Result<Duration> {
+        let mut stmt = self.conn.prepare(
+            "SELECT SUM(duration) FROM logs WHERE project_id = ?1"
+        )?;
+
+        let total_dur = stmt.query_row([id], |row| {
+            Ok(Duration::seconds(row.get(0)?))
+        })?;
+
+        Ok(total_dur)
     }
 }
 
