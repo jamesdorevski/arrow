@@ -68,7 +68,7 @@ impl Repository {
             let created = to_datetime(row.get(2)?);
             let updated = to_datetime(row.get(3)?);
 
-            projs.push(Project::new(row.get(0)?, row.get(1)?, created, updated));
+            projs.push(Project::new(row.get(0)?, row.get(1)?, created, updated, None));
         }
 
         Ok(projs)
@@ -85,7 +85,7 @@ impl Repository {
             let created = to_datetime(row.get(2)?);
             let updated = to_datetime(row.get(3)?);
 
-            Ok(Project::new(row.get(0)?, row.get(1)?, created, updated))
+            Ok(Project::new(row.get(0)?, row.get(1)?, created, updated, None))
         })?;
 
         Ok(proj)
