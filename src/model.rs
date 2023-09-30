@@ -28,7 +28,7 @@ impl Project {
 }
 
 pub struct Log {
-    pub id: Option<u32>,
+    pub id: u32,
     pub proj_id: u32,
     pub message: Option<String>,
     pub start: Option<DateTime<Local>>,
@@ -38,7 +38,7 @@ pub struct Log {
 
 impl Log {
     pub fn new(
-        id: Option<u32>,
+        id: u32,
         proj_id: u32,
         message: Option<String>,
         start: DateTime<Local>,
@@ -61,7 +61,7 @@ impl Log {
     }
 
     pub fn new_no_timestamp(
-        id: Option<u32>,
+        id: u32,
         proj_id: u32,
         message: Option<String>,
         duration_mins: i64,
@@ -85,14 +85,21 @@ impl Log {
     pub fn maybe_get_end_timestamp(&self) -> Option<i64> {
         self.end.map(|t| t.timestamp())
     }
+
+    pub fn unwrap_start_str(&self) -> String {
+        match self.start {
+            None => "N/A".to_string(),
+            Some(v) => v.to_string(),
+        }
+    }
+
+    pub fn unwrap_end_str(&self) -> String {
+        match self.end {
+            None => "N/A".to_string(),
+            Some(v) => v.to_string(),
+        }
+    }
+
+
 }
 
-// impl fmt::Display for Log {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         write!(
-//             f,
-//             "Id: {}, Description: {}, Start: {}, End: {}, Duration: {}",
-//             self.id, self.description, self.start, self.end, self.duration
-//         )
-//     }
-// }
