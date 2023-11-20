@@ -1,3 +1,3 @@
 pub mod handlers;
-mod print;
+pub mod print;
 mod repository;

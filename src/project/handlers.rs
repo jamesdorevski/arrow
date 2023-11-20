@@ -1,5 +1,6 @@
 use chrono::{Local, Duration};
 
+use crate::log;
 use crate::model::Project;
 
 use super::repository::Repository;
@@ -22,9 +23,9 @@ pub fn add(name: &str) {
 
 pub fn list() {
     let repo = repo_conn();
-    let projs = repo.all_projects().expect("Error retrieving your projects");
+    let projects = repo.all_projects().expect("Error retrieving your projects");
 
-    print_table(&projs);
+    print_table(&projects);
 }
 
 pub fn remove(id: &u32) {
@@ -39,11 +40,8 @@ pub fn get(id: &u32) {
     let proj = conn.get_project(id).expect("Error retrieving project!");
     let logs = conn.get_project_logs(id).expect("Error retrieving logs!");
 
-    //println!("{}", proj);
-
-    for l in logs {
-        println!("{}", l);
-    }
+    print_table(&vec![proj]);
+    log::print::print_table(&logs);
 }
 
 // TODO: shouldn't this return an Option? 
