@@ -14,8 +14,8 @@ impl Repository {
 
     pub fn save_log(&self, log: &Log) -> Result<u32> {
         let message: Box <dyn ToSql> = sql_value_or_null(log.message);
-        let start_timestmp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp()); 
-        let end_timestmp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp()); 
+        let start_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp()); 
+        let end_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp()); 
 
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS logs (
@@ -39,8 +39,8 @@ impl Repository {
             params![
                 &log.proj_id,
                 &message,
-                &start_timestmp,
-                &end_timestmp,
+                &start_timestamp,
+                &end_timestamp,
                 &log.duration.num_seconds(),
             ],
         )?;       

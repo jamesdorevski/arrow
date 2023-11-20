@@ -1,5 +1,4 @@
 use chrono::{DateTime, Duration, Local};
-use std::fmt;
 
 pub struct Project {
     pub id: u32,
@@ -99,7 +98,5 @@ impl Log {
             Some(v) => v.to_string(),
         }
     }
-
-
 }
 
