@@ -13,7 +13,7 @@ impl Repository {
     }
 
     pub fn save_log(&self, log: &Log) -> Result<u32> {
-        let message: Box <dyn ToSql> = sql_value_or_null(log.message);
+        let message: Box <dyn ToSql> = sql_value_or_null(log.message.clone());
         let start_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp()); 
         let end_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp()); 
 
@@ -69,7 +69,7 @@ impl Repository {
     }
 }
 
-fn sql_value_or_null<T: ToSql>(arg: Option<T>) -> Box<dyn ToSql> {
+fn sql_value_or_null<T: ToSql + 'static>(arg: Option<T>) -> Box<dyn ToSql> {
     match arg {
         Some(v) => Box::new(v),
         None => Box::new(types::Null)
