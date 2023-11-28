@@ -13,9 +13,9 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Cmds {
-    // Manage your projects
+    /// Manage your projects
     Project {
-        // Get logs from project + info
+        /// Get logs from project + info
         id: Option<u32>,
         #[command(subcommand)]
         sub: ProjectSubCmds
@@ -39,7 +39,7 @@ pub enum ProjectSubCmds {
 
 #[derive(Subcommand)]
 pub enum LogSubCmds {
-    // Start tracking time. Stops when SIGTERM is receieved
+    // Start tracking time. Stops when SIGTERM is received
     Start {
         // Project to log time for
         project: u32,
