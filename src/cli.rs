@@ -30,11 +30,16 @@ pub enum Cmds {
 #[derive(Subcommand)]
 pub enum ProjectSubCmds {
     // Create new project
-    Add { name: String },
-    // Remove project with the given ID
-    Rm { id: u32 },
-    // List projects
-    Ls,
+    Add { 
+        /// Name of the project
+        name: String,
+        /// Optional project description
+        description: Option<String>
+    },
+    // // Remove project with the given ID
+    // Rm { id: u32 },
+    // // List projects
+    // Ls,
 }
 
 #[derive(Subcommand)]
@@ -56,25 +61,25 @@ pub enum LogSubCmds {
         duration: u16,
     },
     // Remove log from a project
-    Rm {
-        // Project to remove log for
-        project: u32,
-        // Id of log to remove
-        log: u32,
-    }
+    // Rm {
+    //     // Project to remove log for
+    //     project: u32,
+    //     // Id of log to remove
+    //     log: u32,
+    // }
 }
 
 pub fn handle(cmd: &Cmds) {
     match cmd {
         Cmds::Project { id, sub } => {
             if let Some(id) = id {
-                project::handlers::get(id)
+                // project::handlers::get(id)
             }
 
             match sub {
-                ProjectSubCmds::Add { name } => project::handlers::add(name),
-                ProjectSubCmds::Rm { id } => project::handlers::remove(id),
-                ProjectSubCmds::Ls => project::handlers::list(),
+                ProjectSubCmds::Add { name, description } => project::handlers::add(name.to_owned(), description.to_owned()),
+                // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
+                // ProjectSubCmds::Ls => project::handlers::list(),
             }
         },
         // Cmds::Log { sub } => {
