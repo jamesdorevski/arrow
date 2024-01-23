@@ -29,7 +29,7 @@ pub enum Cmds {
 
 #[derive(Subcommand)]
 pub enum ProjectSubCmds {
-    // Create new project
+    /// Create new project to track time spent working towards a work item, task, or goal.
     Add { 
         /// Name of the project
         name: String,

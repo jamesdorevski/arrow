@@ -17,7 +17,7 @@ impl Repository {
 
     pub fn save_project(&self, proj: &Project) -> Result<u32> {
         self.conn.execute(
-            "INSERT INTO projects (name, created, updated) VALUES (?1, ?2, ?3)",
+            "INSERT INTO projects (name, description, created, updated) VALUES (?1, ?2, ?3, ?4)",
             params![
                 proj.name, 
                 proj.description, 

@@ -1,8 +1,7 @@
 use chrono::{Local, Duration};
 
 use crate::model::Project;
-
-use super::repository::Repository;
+use crate::repository::Repository;
 
 fn repo_conn() -> Repository {
     Repository::new().expect("Failed to connect to repository!")
