@@ -9,5 +9,7 @@ edition = "2021"
 clap = { version = "4.3.11", features = ["derive"] }
 chrono = { version = "0.4.26", features = ["serde"] }
 rusqlite = { version = "0.29.0", features = ["bundled", "chrono"] }
+refinery = { version = "0.8", features = ["rusqlite"] }
 ctrlc = "3.4.0"
 prettytable-rs = "0.10"
+xdg = "2.5.2"

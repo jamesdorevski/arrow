@@ -9,7 +9,9 @@ pub struct Repository {
 
 impl Repository {
     pub fn new() -> Result<Self, rusqlite::Error> {
-        let conn = Connection::open("arrow.db")?;
+        let xdg_dirs = xdg::BaseDirectories::with_prefix("arrow").unwrap();
+        let db_path = xdg_dirs.get_config_home().join("arrow.db");
+        let conn = Connection::open(db_path)?;
         Ok(Repository { conn })
     }
 

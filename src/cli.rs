@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::project;
-use crate::log;
+//use crate::log;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -20,11 +20,11 @@ pub enum Cmds {
         #[command(subcommand)]
         sub: ProjectSubCmds
     },
-    // Manage logs
-    Log {
-        #[command(subcommand)]
-        sub: LogSubCmds
-    }
+    // // Manage logs
+    // Log {
+    //     #[command(subcommand)]
+    //     sub: LogSubCmds
+    // }
 }
 
 #[derive(Subcommand)]
@@ -77,12 +77,12 @@ pub fn handle(cmd: &Cmds) {
                 ProjectSubCmds::Ls => project::handlers::list(),
             }
         },
-        Cmds::Log { sub } => {
-            match sub {
-                LogSubCmds::Start { project, message } => log::handlers::start_logging(project, message.clone()),
-                LogSubCmds::Add { project, message, duration } => log::handlers::save_log(project, message.clone(), duration),
-                LogSubCmds::Rm { project, log } => log::handlers::remove_log(project, log),
-            };
-        }
+        // Cmds::Log { sub } => {
+        //     match sub {
+        //         LogSubCmds::Start { project, message } => log::handlers::start_logging(project, message.clone()),
+        //         LogSubCmds::Add { project, message, duration } => log::handlers::save_log(project, message.clone(), duration),
+        //         LogSubCmds::Rm { project, log } => log::handlers::remove_log(project, log),
+        //     };
+        // }
     }
 }
