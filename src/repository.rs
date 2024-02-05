@@ -67,22 +67,22 @@ impl Repository {
     //     Ok(projs)
     // }
 
-    // pub fn get_project(&self, id: &u32) -> Result<Project> {
-    //     let mut stmt = self.conn.prepare(
-    //         "SELECT id, name, created, updated
-    //         FROM projects
-    //         WHERE id = ?1",
-    //     )?;
+    pub fn get_project(&self, id: &u32) -> Result<Project> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, description, created, updated
+            FROM projects
+            WHERE id = ?1",
+        )?;
 
-    //     let proj = stmt.query_row([id], |row| {
-    //         let created = to_datetime(row.get(2)?);
-    //         let updated = to_datetime(row.get(3)?);
+        let proj = stmt.query_row([id], |row| {
+            let created = to_datetime(row.get(3)?);
+            let updated = to_datetime(row.get(4)?);
 
-    //         Ok(Project::new(row.get(0)?, row.get(1)?, created, updated, None))
-    //     })?;
+            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated, None))
+        })?;
 
-    //     Ok(proj)
-    // }
+        Ok(proj)
+    }
 
     // pub fn get_project_logs(&self, proj_id: &u32) -> Result<Vec<Log>> {
     //     let mut stmt = self.conn.prepare(
@@ -124,9 +124,47 @@ impl Repository {
     // }
 }
 
-// fn to_datetime(timestamp: i64) -> DateTime<Local> {
-//     Local
-//         .timestamp_opt(timestamp, 0)
-//         .single()
-//         .expect("Failed to read timestamp")
-// }
+fn to_datetime(timestamp: i64) -> DateTime<Local> {
+    Local
+        .timestamp_opt(timestamp, 0)
+        .single()
+        .expect("Failed to read timestamp")
+}
+
+mod embedded {
+    use refinery::embed_migrations;
+    embed_migrations!();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // project saves successfully 
+    // edge cases - empty string; null string; integer
+    // check if project saves w/o description
+
+    #[test]
+    fn project_should_save_in_db() {
+        // Arrange
+        let created = Local::now();
+        let updated = Local::now();
+        
+        let project = Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated, None);
+        
+        let mut conn = Connection::open_in_memory().unwrap();
+        embedded::migrations::runner().run(&mut conn).unwrap();
+        let repo = Repository { conn };
+
+        // Act
+        let id = repo.save_project(&project);
+
+        // Assert
+        let actual_project = repo.get_project(&id.unwrap()).unwrap();
+        
+        assert_eq!("test", actual_project.name);
+        assert_eq!("hi", actual_project.description.unwrap());
+        assert_eq!(created.timestamp(), actual_project.created.timestamp());
+        assert_eq!(updated.timestamp(), actual_project.updated.timestamp());
+    }
+}
