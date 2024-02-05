@@ -29,43 +29,43 @@ impl Repository {
         Ok(self.conn.last_insert_rowid() as u32)
     }
     
-    // // TODO: handle foreign key violation when logs exist
-    // pub fn remove_project(&self, id: &u32) {
-    //     match self
-    //         .conn
-    //         .execute("DELETE FROM projects WHERE id = ?1", &[id])
-    //     {
-    //         Ok(rows) => {
-    //             if rows < 1 {
-    //                 eprintln!(
-    //                     "No project with id {} exists. Please specify an existing project.",
-    //                     id
-    //                 );
-    //             } else {
-    //                 println!("Deleted project {}", id);
-    //             }
-    //         }
-    //         Err(err) => panic!("Delete failed: {}", err),
-    //     };
-    // }
+    // TODO: handle foreign key violation when logs exist
+    pub fn remove_project(&self, id: &u32) {
+        match self
+            .conn
+            .execute("DELETE FROM projects WHERE id = ?1", &[id])
+        {
+            Ok(rows) => {
+                if rows < 1 {
+                    eprintln!(
+                        "No project with id {} exists. Please specify an existing project.",
+                        id
+                    );
+                } else {
+                    println!("Deleted project {}", id);
+                }
+            }
+            Err(err) => panic!("Delete failed: {}", err),
+        };
+    }
 
-    // pub fn all_projects(&self) -> Result<Vec<Project>> {
-    //     let mut stmt = self.conn.prepare(
-    //         "SELECT id, name, created, updated
-    //         FROM projects",
-    //     )?;
-    //     let mut rows = stmt.query([])?;
+    pub fn all_projects(&self) -> Result<Vec<Project>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, description, created, updated
+            FROM projects",
+        )?;
+        let mut rows = stmt.query([])?;
 
-    //     let mut projs: Vec<Project> = Vec::new();
-    //     while let Some(row) = rows.next()? {
-    //         let created = to_datetime(row.get(2)?);
-    //         let updated = to_datetime(row.get(3)?);
+        let mut projects: Vec<Project> = Vec::new();
+        while let Some(row) = rows.next()? {
+            let created = to_datetime(row.get(3)?);
+            let updated = to_datetime(row.get(4)?);
 
-    //         projs.push(Project::new(row.get(0)?, row.get(1)?, created, updated, None));
-    //     }
+            projects.push(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated, None));
+        }
 
-    //     Ok(projs)
-    // }
+        Ok(projects)
+    }
 
     pub fn get_project(&self, id: &u32) -> Result<Project> {
         let mut stmt = self.conn.prepare(
@@ -145,7 +145,7 @@ mod tests {
     // check if project saves w/o description
 
     #[test]
-    fn project_should_save_in_db() {
+    fn save_project_should_save_in_db() {
         // Arrange
         let created = Local::now();
         let updated = Local::now();
@@ -166,5 +166,55 @@ mod tests {
         assert_eq!("hi", actual_project.description.unwrap());
         assert_eq!(created.timestamp(), actual_project.created.timestamp());
         assert_eq!(updated.timestamp(), actual_project.updated.timestamp());
+    }
+
+    #[test]
+    fn project_should_save_in_db_no_description() {
+        // Arrange
+        let name = "test2";
+        let created = Local::now();
+        let updated = Local::now();
+        
+        let project = Project::new(0, name.to_owned(), None, created, updated, None);
+        
+        let mut conn = Connection::open_in_memory().unwrap();
+        embedded::migrations::runner().run(&mut conn).unwrap();
+        let repo = Repository { conn };
+
+        // Act
+        let id = repo.save_project(&project);
+
+        // Assert
+        let actual_project = repo.get_project(&id.unwrap()).unwrap();
+        
+        assert_eq!(name, actual_project.name);
+        assert_eq!(None, actual_project.description);
+        assert_eq!(created.timestamp(), actual_project.created.timestamp());
+        assert_eq!(updated.timestamp(), actual_project.updated.timestamp());
+    }
+
+    #[test]
+    fn all_projects_should_return_all_projects() {
+        // Arrange
+        let mut conn = Connection::open_in_memory().unwrap();
+        embedded::migrations::runner().run(&mut conn).unwrap();
+        let repo = Repository { conn };
+        
+        for n in 1..=2 {
+            let name = format!("test{}", n);
+            let created = Local::now();
+            let updated = Local::now();
+            
+            let project = Project::new(0, name.to_owned(), Option::Some("hi".to_owned()), created, updated, None);
+            let _ = repo.save_project(&project);
+        }
+
+        // Act
+        let projects = repo.all_projects().unwrap();
+
+        // Assert
+        assert_eq!(2, projects.len());
+
+
     }
 }
