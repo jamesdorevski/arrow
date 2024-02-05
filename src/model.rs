@@ -32,73 +32,25 @@ impl Project {
 pub struct Log {
     pub id: u32,
     pub proj_id: u32,
-    pub message: Option<String>,
-    pub start: Option<DateTime<Local>>,
-    pub end: Option<DateTime<Local>>,
-    pub duration: Duration,
+    pub message: String,
+    pub start: DateTime<Local>,
+    pub end: DateTime<Local>
 }
 
 impl Log {
     pub fn new(
         id: u32,
         proj_id: u32,
-        message: Option<String>,
+        message: String,
         start: DateTime<Local>,
         end: DateTime<Local>,
-        duration: Option<i64>,
     ) -> Self {
-        let duration = match duration {
-            Some(val) => Duration::seconds(val),
-            None => Duration::seconds(end.timestamp() - start.timestamp()),
-        };
-
         Log {
             id, // db-generated
             proj_id,
             message,
-            start: Some(start),
-            end: Some(end),
-            duration,
-        }
-    }
-
-    pub fn new_no_timestamp(
-        id: u32,
-        proj_id: u32,
-        message: Option<String>,
-        duration_mins: i64,
-    ) -> Self {
-        let duration = Duration::minutes(duration_mins);
-
-        Log {
-            id,
-            proj_id,
-            message,
-            start: None,
-            end: None,
-            duration
-        }
-    }
-
-    pub fn maybe_get_start_timestamp(&self) -> Option<i64> {
-        self.start.map(|t| t.timestamp())
-    }
-
-    pub fn maybe_get_end_timestamp(&self) -> Option<i64> {
-        self.end.map(|t| t.timestamp())
-    }
-
-    pub fn unwrap_start_str(&self) -> String {
-        match self.start {
-            None => "N/A".to_string(),
-            Some(v) => v.to_string(),
-        }
-    }
-
-    pub fn unwrap_end_str(&self) -> String {
-        match self.end {
-            None => "N/A".to_string(),
-            Some(v) => v.to_string(),
+            start,
+            end,
         }
     }
 }

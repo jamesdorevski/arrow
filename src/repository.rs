@@ -7,6 +7,23 @@ pub struct Repository {
     conn: Connection,
 }
 
+// contract:
+// - save project
+/*
+Contract:
+- save project
+- save log 
+- save tag
+- get project
+- get all projects
+- tag query 
+- update project
+- update log
+- delete project
+- delete log 
+- delete tag 
+*/
+
 impl Repository {
     pub fn new() -> Result<Self, rusqlite::Error> {
         let xdg_dirs = xdg::BaseDirectories::with_prefix("arrow").unwrap();
@@ -15,14 +32,39 @@ impl Repository {
         Ok(Repository { conn })
     }
 
-    pub fn save_project(&self, proj: &Project) -> Result<u32> {
+    /// Saves the given project to the database
+    /// 
+    /// # Arguments
+    /// 
+    /// * `project` - The project to be saved
+    pub fn save_project(&self, project: &Project) -> Result<u32> {
         self.conn.execute(
             "INSERT INTO projects (name, description, created, updated) VALUES (?1, ?2, ?3, ?4)",
             params![
-                proj.name, 
-                proj.description, 
-                proj.created.timestamp(), 
-                proj.created.timestamp()
+                project.name, 
+                project.description, 
+                project.created.timestamp(), 
+                project.created.timestamp()
+            ]
+        )?;
+
+        Ok(self.conn.last_insert_rowid() as u32)
+    }
+
+    /// Saves the log to the database
+    /// 
+    /// # Arguments
+    /// 
+    /// * `project_id` - ID of the project to save the log under
+    /// * `log` - The log to be saved
+    pub fn save_log(&self, project_id: &u32, log: &Log) -> Result<u32> {
+        self.conn.execute(
+            "INSERT INTO logs (message, start, end, project_id) VALUES (?1, ?2, ?3, ?4)", 
+            params![
+                log.message,
+                log.start.timestamp(),
+                log.end.timestamp(),
+                project_id
             ]
         )?;
 
@@ -30,7 +72,12 @@ impl Repository {
     }
     
     // TODO: handle foreign key violation when logs exist
-    pub fn remove_project(&self, id: &u32) {
+    /// Delete a project by it's ID. Deletes all logs that are associated with it
+    /// 
+    /// # Arguments
+    /// 
+    /// * `id` - ID of the project to delete
+    pub fn delete_project(&self, id: &u32) {
         match self
             .conn
             .execute("DELETE FROM projects WHERE id = ?1", &[id])
@@ -49,6 +96,7 @@ impl Repository {
         };
     }
 
+    /// Retrieve all projects in the database
     pub fn all_projects(&self) -> Result<Vec<Project>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
@@ -67,6 +115,11 @@ impl Repository {
         Ok(projects)
     }
 
+    /// Retrieve a project with the given ID
+    /// 
+    /// # Arguments
+    /// 
+    /// - `id` - ID of the project to retrieve 
     pub fn get_project(&self, id: &u32) -> Result<Project> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
@@ -214,7 +267,5 @@ mod tests {
 
         // Assert
         assert_eq!(2, projects.len());
-
-
     }
 }
