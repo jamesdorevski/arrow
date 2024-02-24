@@ -1,7 +1,7 @@
 use chrono::{Local};
 use std::io::{self, Write};
 
-use crate::{model::Project, repository::Repository};
+use crate::{model::Project, print::table::Table, repository::Repository};
 
 fn repo_conn() -> Repository {
     Repository::new().expect("Failed to connect to repository!")
@@ -13,6 +13,31 @@ pub fn new(name: String, description: Option<String>) -> Result<String, rusqlite
 
     repo.save_project(&new_proj)?;
     Ok(new_proj.name)
+}
+
+pub fn list() {
+    let repo = repo_conn();
+
+    match repo.all_projects() {
+        Ok(projects) => {
+            print_projects(&projects);
+        },
+        Err(e) => eprintln!("Error retrieving your projects: {}", e),
+    }
+}
+
+fn print_projects(projects: &Vec<Project>) {
+    let mut table = Table::new(vec!["ID".to_string(), "Name".to_string(), "Description".to_string(), "Created".to_string(), "Updated".to_string()]);
+    for proj in projects {
+        table.add_row(vec![
+            proj.id.to_string(),
+            proj.name.clone(),
+            proj.description.clone().unwrap_or("".to_string()),
+            proj.created.to_string(),
+            proj.updated.to_string(),
+        ]);
+    }
+    table.print();
 }
 
 #[cfg(test)]

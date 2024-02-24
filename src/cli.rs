@@ -38,8 +38,8 @@ pub enum ProjectSubCmds {
     },
     // // Remove project with the given ID
     // Rm { id: u32 },
-    // // List projects
-    // Ls,
+    /// List projects
+    Ls,
 }
 
 #[derive(Subcommand)]
@@ -84,7 +84,7 @@ pub fn handle(cmd: &Cmds) {
                     }
                 },
                 // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
-                // ProjectSubCmds::Ls => project::handlers::list(),
+                ProjectSubCmds::Ls => project::handlers::list(),
             }
         },
         // Cmds::Log { sub } => {

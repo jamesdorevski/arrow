@@ -3,3 +3,4 @@ pub mod log;
 pub mod model;
 pub mod project;
 pub mod repository;
+pub mod print;
