@@ -1,14 +1,13 @@
 use chrono::{Local, Duration};
 
-use crate::model::Project;
-use crate::repository::Database;
+use crate::{model::Project, repository::Repository};
 
-fn repo_conn() -> Database {
-    Database::new().expect("Failed to connect to repository!")
+fn repo_conn() -> Repository {
+    Repository::new().expect("Failed to connect to repository!")
 }
 
 pub fn add(name: String, description: Option<String>) {
-    let mut new_proj = Project::new(0, name, description, Local::now(), Local::now(), None);
+    let mut new_proj = Project::new(0, name, description, Local::now(), Local::now());
     let repo = repo_conn();
 
     new_proj.id = repo

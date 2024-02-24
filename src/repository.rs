@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, TimeZone, Duration};
+use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Result, params};
 
 use crate::model::{Log, Project};
@@ -71,7 +71,7 @@ impl Repository {
         Ok(self.conn.last_insert_rowid() as u32)
     }
     
-    // TODO: handle foreign key violation when logs exist
+    // TODO: handle foreign key violation when logs exis
     /// Delete a project by it's ID. Deletes all logs that are associated with it
     /// 
     /// # Arguments
@@ -109,32 +109,48 @@ impl Repository {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            projects.push(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated, None));
+            projects.push(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated));
         }
 
         Ok(projects)
     }
 
-    /// Retrieve a project with the given ID
+    /// Retrieve a project, and it's logs with by project ID
     /// 
     /// # Arguments
     /// 
     /// - `id` - ID of the project to retrieve 
-    pub fn get_project(&self, id: &u32) -> Result<Project> {
+    pub fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
             FROM projects
             WHERE id = ?1",
         )?;
-
         let proj = stmt.query_row([id], |row| {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated, None))
+            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated))
         })?;
 
-        Ok(proj)
+        stmt = self.conn.prepare(
+            "SELECT l.id, l.message, l.start, l.end 
+                FROM projects p
+                INNER JOIN logs l ON p.id = l.project_id
+                WHERE p.id = ?1"
+        )?;
+
+        let mut rows = stmt.query([id])?;
+        let mut logs: Vec<Log> = Vec::new();
+
+        while let Some(row) = rows.next()? {
+            let start = to_datetime(row.get(2)?);
+            let end = to_datetime(row.get(3)?);
+            
+            logs.push(Log::new(row.get(0)?, *id, row.get(1)?, start, end))
+        }
+
+        Ok((proj, logs))
     }
 
     // pub fn get_project_logs(&self, proj_id: &u32) -> Result<Vec<Log>> {
@@ -194,8 +210,15 @@ mod tests {
     use super::*;
 
     // project saves successfully 
+    // logs save successfully // log without a project is rejected 
     // edge cases - empty string; null string; integer
     // check if project saves w/o description
+
+    fn test_repo() -> Repository {
+        let mut conn = Connection::open_in_memory().unwrap();
+        embedded::migrations::runner().run(&mut conn).unwrap();
+        Repository { conn }
+    }
 
     #[test]
     fn save_project_should_save_in_db() {
@@ -203,17 +226,15 @@ mod tests {
         let created = Local::now();
         let updated = Local::now();
         
-        let project = Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated, None);
-        
-        let mut conn = Connection::open_in_memory().unwrap();
-        embedded::migrations::runner().run(&mut conn).unwrap();
-        let repo = Repository { conn };
+        let project = Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated);
+
+        let repo = test_repo();
 
         // Act
         let id = repo.save_project(&project);
 
         // Assert
-        let actual_project = repo.get_project(&id.unwrap()).unwrap();
+        let (actual_project, _) = repo.get_project(&id.unwrap()).unwrap();
         
         assert_eq!("test", actual_project.name);
         assert_eq!("hi", actual_project.description.unwrap());
@@ -228,17 +249,15 @@ mod tests {
         let created = Local::now();
         let updated = Local::now();
         
-        let project = Project::new(0, name.to_owned(), None, created, updated, None);
-        
-        let mut conn = Connection::open_in_memory().unwrap();
-        embedded::migrations::runner().run(&mut conn).unwrap();
-        let repo = Repository { conn };
+        let project = Project::new(0, name.to_owned(), None, created, updated);
+
+        let repo = test_repo();       
 
         // Act
         let id = repo.save_project(&project);
 
         // Assert
-        let actual_project = repo.get_project(&id.unwrap()).unwrap();
+        let (actual_project, _) = repo.get_project(&id.unwrap()).unwrap();
         
         assert_eq!(name, actual_project.name);
         assert_eq!(None, actual_project.description);
@@ -258,7 +277,7 @@ mod tests {
             let created = Local::now();
             let updated = Local::now();
             
-            let project = Project::new(0, name.to_owned(), Option::Some("hi".to_owned()), created, updated, None);
+            let project = Project::new(0, name.to_owned(), Option::Some("hi".to_owned()), created, updated);
             let _ = repo.save_project(&project);
         }
 
@@ -267,5 +286,35 @@ mod tests {
 
         // Assert
         assert_eq!(2, projects.len());
+    }
+
+    #[test]
+    fn save_log_should_save_in_db() {
+        // Arrange
+        let repo = test_repo();
+
+        let created = Local::now();
+        let updated = Local::now();
+        let project = Project::new(0, "project".to_owned(), None, created, updated);
+        
+        let message = "code cleanup";
+        let log = Log::new(0, project_id, message.to_owned(), created, updated);
+        
+        let project_id = repo.save_project(&project).unwrap();
+        
+        // Act
+        repo.save_log(&project_id, &log).unwrap();
+
+        // Assert
+        let (actual_project, actual_logs) = repo.get_project(&project_id).unwrap();
+
+        assert_eq!("project", actual_project.name);
+        assert_eq!(created.timestamp(), actual_project.created.timestamp());
+        assert_eq!(updated.timestamp(), actual_project.updated.timestamp());
+
+        assert_eq!(1, actual_logs.len());
+        assert_eq!(message, actual_logs[0].message);
+        assert_eq!(created.timestamp(), actual_logs[0].start.timestamp());
+        assert_eq!(updated.timestamp(), actual_logs[0].end.timestamp());
     }
 }
