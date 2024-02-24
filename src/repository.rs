@@ -112,6 +112,31 @@ impl Repository {
         };
     }
 
+    /// Delete a log by it's project ID and log ID. 
+    ///
+    /// # Arguments
+    ///
+    /// * `proj_id` - ID of the project to delete the log from
+    /// * `log_id` - ID of the log to delete
+    pub fn delete_log(&self, proj_id: &u32, log_id: &u32) {
+        match self
+            .conn
+            .execute("DELETE FROM logs WHERE id = ?1 AND project_id = ?2", [log_id, proj_id])
+        {
+            Ok(rows) => {
+                if rows < 1 {
+                    eprintln!(
+                        "No log with id {} exists for project {}. Please specify an existing log.",
+                        log_id, proj_id
+                    );
+                } else {
+                    println!("Deleted log {}", log_id);
+                }
+            }
+            Err(err) => panic!("Delete failed: {}", err),
+        };
+    }
+
     /// Retrieve all projects in the database
     pub fn all_projects(&self) -> Result<Vec<Project>> {
         let mut stmt = self.conn.prepare(
@@ -353,5 +378,26 @@ mod tests {
         // Assert
         let res = repo.get_project(&project_id);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn delete_log_should_delete_log_from_db() {
+        // Arrange
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        let message = "code cleanup";
+        let log = Log::new(0, project_id, message.to_owned(), project.created, project.updated);
+
+        let log_id = repo.save_log(&project_id, &log).unwrap();
+        
+        // Act
+        repo.delete_log(&project_id, &log_id);
+
+        // Assert
+        let (_, logs) = repo.get_project(&project_id).unwrap();
+        assert_eq!(0, logs.len());
     }
 }
