@@ -30,7 +30,7 @@ pub enum Cmds {
 #[derive(Subcommand)]
 pub enum ProjectSubCmds {
     /// Create new project to track time spent working towards a work item, task, or goal.
-    Add { 
+    New { 
         /// Name of the project
         name: String,
         /// Optional project description
@@ -77,7 +77,12 @@ pub fn handle(cmd: &Cmds) {
             }
 
             match sub {
-                ProjectSubCmds::Add { name, description } => project::handlers::add(name.to_owned(), description.to_owned()),
+                ProjectSubCmds::New { name, description } => {
+                    match project::handlers::new(name.to_owned(), description.to_owned()) {
+                        Ok(_) => println!("{} created successfully.\n", name),
+                        Err(e) => eprintln!("Failed to create new project: {}", e),
+                    }
+                },
                 // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
                 // ProjectSubCmds::Ls => project::handlers::list(),
             }

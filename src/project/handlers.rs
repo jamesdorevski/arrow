@@ -1,4 +1,5 @@
-use chrono::{Local, Duration};
+use chrono::{Local};
+use std::io::{self, Write};
 
 use crate::{model::Project, repository::Repository};
 
@@ -6,16 +7,29 @@ fn repo_conn() -> Repository {
     Repository::new().expect("Failed to connect to repository!")
 }
 
-pub fn add(name: String, description: Option<String>) {
-    let mut new_proj = Project::new(0, name, description, Local::now(), Local::now());
+pub fn new(name: String, description: Option<String>) -> Result<String, rusqlite::Error> {
+    let new_proj = Project::new(0, name, description, Local::now(), Local::now());
     let repo = repo_conn();
 
-    new_proj.id = repo
-        .save_project(&new_proj)
-        .expect("Failed to create new project!");
-
-    println!("Created project {}", "TODO: use function once implemented");
+    repo.save_project(&new_proj)?;
+    Ok(new_proj.name)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn project_saved_successfully_should_print_project_name() {
+        // Arrange
+        // Act
+        let res = new("Test Project".to_string(), None);
+
+        // Assert
+        assert_eq!("Test Project", res.unwrap());
+    }
+}
+
 
 // pub fn list() {
 //     let repo = repo_conn();

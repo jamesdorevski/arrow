@@ -7,8 +7,6 @@ pub struct Repository {
     conn: Connection,
 }
 
-// contract:
-// - save project
 /*
 Contract:
 - save project
@@ -242,11 +240,11 @@ mod embedded {
 mod tests {
     use super::*;
 
-    // project saves successfully 
-    // logs save successfully // log without a project is rejected 
+    // project saves successfully  // DONE
+    // logs save successfully // log without a project is rejected  // DONE
     // edge cases - empty string; null string; integer
-    // check if project saves w/o description
-    // delete projects + logs 
+    // check if project saves w/o description // DONE 
+    // delete projects + logs // DONE
     // update projects + logs 
 
     fn test_repo() -> Repository {
@@ -355,6 +353,23 @@ mod tests {
         assert_eq!(message, actual_logs[0].message);
         assert_eq!(created.timestamp(), actual_logs[0].start.timestamp());
         assert_eq!(updated.timestamp(), actual_logs[0].end.timestamp());
+    }
+
+    #[test]
+    fn save_log_no_project_should_fail() {
+        // Arrange
+        let repo = test_repo();
+        let start = Local::now();
+        let end = Local::now();
+        
+        let message = "code cleanup";
+        let log = Log::new(0, 0, message.to_owned(), start, end);
+        
+        // Act
+        let res = repo.save_log(&0, &log);
+
+        // Assert
+        assert!(res.is_err());
     }
 
     #[test]
