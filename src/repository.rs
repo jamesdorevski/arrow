@@ -71,7 +71,6 @@ impl Repository {
         Ok(self.conn.last_insert_rowid() as u32)
     }
     
-    // TODO: handle foreign key violation when logs exis
     /// Delete a project by it's ID. Deletes all logs that are associated with it
     /// 
     /// # Arguments
@@ -80,7 +79,24 @@ impl Repository {
     pub fn delete_project(&self, id: &u32) {
         match self
             .conn
-            .execute("DELETE FROM projects WHERE id = ?1", &[id])
+            .execute("DELETE FROM logs WHERE project_id = ?1", [id]) 
+        {
+            Ok(rows) => {
+                if rows < 1 {
+                    eprintln!(
+                        "No logs for project with id {} exists. Please specify an existing project.",
+                        id
+                    );
+                } else {
+                    println!("Deleted logs for project {}", id);
+                }
+            }
+            Err(err) => panic!("Delete failed: {}", err),
+        }
+
+        match self
+            .conn
+            .execute("DELETE FROM projects WHERE id = ?1", [id])
         {
             Ok(rows) => {
                 if rows < 1 {
@@ -153,44 +169,36 @@ impl Repository {
         Ok((proj, logs))
     }
 
-    // pub fn get_project_logs(&self, proj_id: &u32) -> Result<Vec<Log>> {
-    //     let mut stmt = self.conn.prepare(
-    //         "SELECT id, description, start, end, duration
-    //         FROM logs
-    //         WHERE project_id = ?1",
-    //     )?;
+    pub fn get_logs(&self, proj_id: &u32, msg: &str) -> Result<Vec<Log>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT
+                l.id
+                l.message
+                l.start
+                l.end
+            FROM 
+                logs l 
+            INNER JOIN 
+                projects p ON l.project_id = p.id
+            WHERE 
+                p.id = ?1 
+            AND
+                l.message LIKE %?2%"
+        )?;
 
-    //     let mut rows = stmt.query([proj_id])?;
+        let mut rows = stmt.query(params![proj_id, msg])?;
+        let mut logs: Vec<Log> = Vec::new();
 
-    //     let mut logs: Vec<Log> = Vec::new();
-    //     while let Some(row) = rows.next()? {
-    //         let start = to_datetime(row.get(2)?);
-    //         let end = to_datetime(row.get(3)?);
+        while let Some(row) = rows.next()? {
+            let start = to_datetime(row.get(2)?);
+            let end = to_datetime(row.get(3)?);
 
-    //         logs.push(Log::new(
-    //             row.get(0)?,
-    //             *proj_id,
-    //             row.get(1)?,
-    //             start,
-    //             end,
-    //             row.get(4)?,
-    //         ));
-    //     }
+            logs.push(Log::new(row.get(0)?, *proj_id, row.get(1)?, start, end));
+        }
 
-    //     Ok(logs)
-    // }
+        Ok(logs)
+    }
 
-    // pub fn get_total_duration(&self, id: &u32) -> Result<Duration> {
-    //     let mut stmt = self.conn.prepare(
-    //         "SELECT SUM(duration) FROM logs WHERE project_id = ?1"
-    //     )?;
-
-    //     let total_dur = stmt.query_row([id], |row| {
-    //         Ok(Duration::seconds(row.get(0)?))
-    //     })?;
-
-    //     Ok(total_dur)
-    // }
 }
 
 fn to_datetime(timestamp: i64) -> DateTime<Local> {
@@ -213,6 +221,8 @@ mod tests {
     // logs save successfully // log without a project is rejected 
     // edge cases - empty string; null string; integer
     // check if project saves w/o description
+    // delete projects + logs 
+    // update projects + logs 
 
     fn test_repo() -> Repository {
         let mut conn = Connection::open_in_memory().unwrap();
@@ -220,15 +230,18 @@ mod tests {
         Repository { conn }
     }
 
-    #[test]
-    fn save_project_should_save_in_db() {
-        // Arrange
+    fn default_test_project() -> Project {
         let created = Local::now();
         let updated = Local::now();
         
-        let project = Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated);
+        Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated)
+    }
 
+    #[test]
+    fn save_project_should_save_in_db() {
+        // Arrange
         let repo = test_repo();
+        let project = default_test_project();
 
         // Act
         let id = repo.save_project(&project);
@@ -238,8 +251,8 @@ mod tests {
         
         assert_eq!("test", actual_project.name);
         assert_eq!("hi", actual_project.description.unwrap());
-        assert_eq!(created.timestamp(), actual_project.created.timestamp());
-        assert_eq!(updated.timestamp(), actual_project.updated.timestamp());
+        assert_eq!(project.created.timestamp(), actual_project.created.timestamp());
+        assert_eq!(project.updated.timestamp(), actual_project.updated.timestamp());
     }
 
     #[test]
@@ -297,10 +310,11 @@ mod tests {
         let updated = Local::now();
         let project = Project::new(0, "project".to_owned(), None, created, updated);
         
+        let project_id = repo.save_project(&project).unwrap();
+
         let message = "code cleanup";
         let log = Log::new(0, project_id, message.to_owned(), created, updated);
         
-        let project_id = repo.save_project(&project).unwrap();
         
         // Act
         repo.save_log(&project_id, &log).unwrap();
@@ -316,5 +330,28 @@ mod tests {
         assert_eq!(message, actual_logs[0].message);
         assert_eq!(created.timestamp(), actual_logs[0].start.timestamp());
         assert_eq!(updated.timestamp(), actual_logs[0].end.timestamp());
+    }
+
+    #[test]
+    fn delete_project_should_delete_project_from_db() {
+        // Arrange
+
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        let message = "code cleanup";
+        let log = Log::new(0, project_id, message.to_owned(), project.created, project.updated);
+
+        repo.save_log(&project_id, &log).unwrap();
+        
+        // Act
+        repo.delete_project(&project_id);
+
+        // confirm log + project is removed 
+        // Assert
+        let res = repo.get_project(&project_id);
+        assert!(res.is_err());
     }
 }
