@@ -37,7 +37,7 @@ fn print_projects(projects: &Vec<Project>) {
             proj.updated.to_string(),
         ]);
     }
-    table.print();
+    table.print(&mut std::io::stdout());
 }
 
 #[cfg(test)]
