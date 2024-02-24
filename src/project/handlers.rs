@@ -1,5 +1,4 @@
 use chrono::{Local};
-use std::io::{self, Write};
 
 use crate::{model::Project, print::table::Table, repository::Repository};
 
@@ -7,12 +6,26 @@ fn repo_conn() -> Repository {
     Repository::new().expect("Failed to connect to repository!")
 }
 
-pub fn new(name: String, description: Option<String>) -> Result<String, rusqlite::Error> {
-    let new_proj = Project::new(0, name, description, Local::now(), Local::now());
+pub fn new(name: String, description: Option<String>) {
     let repo = repo_conn();
+    match repo.project_exists(&name) {
+        Ok(true) => {
+            eprintln!("A project with the name \"{}\" already exists. Skipping...", name);
+            return;
+        },
+        Ok(false) => {},
+        Err(e) => {
+            eprintln!("Error checking for existing project: {}", e);
+            return;
+        }
+    }
 
-    repo.save_project(&new_proj)?;
-    Ok(new_proj.name)
+    let new_proj = Project::new(0, name, description, Local::now(), Local::now());
+
+    match repo.save_project(&new_proj) {
+        Ok(_) => println!("{} created successfully.\n", new_proj.name),
+        Err(e) => eprintln!("Failed to create new project: {}", e),
+    }
 }
 
 pub fn list() {
@@ -44,15 +57,6 @@ fn print_projects(projects: &Vec<Project>) {
 mod tests {
     use super::*;
 
-    #[test]
-    fn project_saved_successfully_should_print_project_name() {
-        // Arrange
-        // Act
-        let res = new("Test Project".to_string(), None);
-
-        // Assert
-        assert_eq!("Test Project", res.unwrap());
-    }
 }
 
 

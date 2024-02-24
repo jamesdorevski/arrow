@@ -77,12 +77,7 @@ pub fn handle(cmd: &Cmds) {
             }
 
             match sub {
-                ProjectSubCmds::New { name, description } => {
-                    match project::handlers::new(name.to_owned(), description.to_owned()) {
-                        Ok(_) => println!("{} created successfully.\n", name),
-                        Err(e) => eprintln!("Failed to create new project: {}", e),
-                    }
-                },
+                ProjectSubCmds::New { name, description } => project::handlers::new(name.to_owned(), description.to_owned()),
                 // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
                 ProjectSubCmds::Ls => project::handlers::list(),
             }

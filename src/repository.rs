@@ -222,6 +222,20 @@ impl Repository {
         Ok(logs)
     }
 
+    pub fn project_exists(&self, name: &str) -> Result<bool> {
+        let mut stmt = self.conn.prepare(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM projects
+                WHERE name = ?1
+            )"
+        )?;
+
+        let exists: i32 = stmt.query_row(params![name], |row| row.get(0))?;
+
+        Ok(exists == 1)
+    }
+
 }
 
 fn to_datetime(timestamp: i64) -> DateTime<Local> {
@@ -414,5 +428,32 @@ mod tests {
         // Assert
         let (_, logs) = repo.get_project(&project_id).unwrap();
         assert_eq!(0, logs.len());
+    }
+
+    #[test]
+    fn project_exists_should_return_true_if_project_exists() {
+        // Arrange
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        // Act
+        let res = repo.project_exists(&project.name);
+
+        // Assert
+        assert!(res.unwrap());
+    }
+
+    #[test]
+    fn project_exists_should_return_false_if_project_does_not_exist() {
+        // Arrange
+        let repo = test_repo();
+        
+        // Act
+        let res = repo.project_exists("non-existent");
+
+        // Assert
+        assert!(!res.unwrap());
     }
 }
