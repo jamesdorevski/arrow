@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local, TimeZone};
+use mockall::automock;
 use rusqlite::{params, Connection, Result};
 
 use crate::model::{Log, Project};
@@ -22,6 +23,7 @@ Contract:
 - delete tag 
 */
 
+#[automock]
 impl Repository {
     pub fn new() -> Result<Self, rusqlite::Error> {
         let xdg_dirs = xdg::BaseDirectories::with_prefix("arrow").unwrap();

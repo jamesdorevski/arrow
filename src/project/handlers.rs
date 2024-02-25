@@ -52,7 +52,13 @@ pub fn edit(id: u32, name: Option<String>, description: Option<String>) {
             }
 
             match repo.update_project(&proj) {
-                Ok(_) => println!("Project updated successfully."),
+                Ok(updated_rows) => { 
+                    if updated_rows > 0 {
+                        println!("{} updated successfully.\n", proj.name);
+                    } else {
+                        eprintln!("No project with ID {} was found. Is it the right ID?", id);
+                    }
+                }
                 Err(e) => eprintln!("Failed to update project: {}", e),
             }
         },
