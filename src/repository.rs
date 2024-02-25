@@ -236,6 +236,21 @@ impl Repository {
         Ok(exists == 1)
     }
 
+    pub fn update_project(&self, project: &Project) -> Result<()> {
+        self.conn.execute(
+            "UPDATE projects
+            SET name = ?1, description = ?2, updated = ?3
+            WHERE id = ?4",
+            params![
+                project.name,
+                project.description,
+                Local::now().timestamp(),
+                project.id
+            ]
+        )?;
+
+        Ok(())
+    }
 }
 
 fn to_datetime(timestamp: i64) -> DateTime<Local> {
@@ -455,5 +470,27 @@ mod tests {
 
         // Assert
         assert!(!res.unwrap());
+    }
+
+    #[test]
+    fn update_project_should_update_project_in_db() {
+        // Arrange
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        let updated_name = "updated";
+        let updated_desc = "updated desc";
+        let updated_project = Project::new(project_id, updated_name.to_owned(), Option::Some(updated_desc.to_owned()), Local::now(), Local::now());
+
+        // Act
+        repo.update_project(&updated_project).unwrap();
+
+        // Assert
+        let (actual_project, _) = repo.get_project(&project_id).unwrap();
+        
+        assert_eq!(updated_name, actual_project.name);
+        assert_eq!(updated_desc, actual_project.description.unwrap());
     }
 }

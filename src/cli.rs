@@ -40,6 +40,17 @@ pub enum ProjectSubCmds {
     // Rm { id: u32 },
     /// List projects
     Ls,
+    /// Edit a project
+    Edit {
+        /// ID of the project to edit
+        id: u32,
+        /// New name for project
+        #[arg(short, long)]
+        name: Option<String>,
+        /// New description for project
+        #[arg(short, long)]
+        description: Option<String>,
+    }
 }
 
 #[derive(Subcommand)]
@@ -80,6 +91,7 @@ pub fn handle(cmd: &Cmds) {
                 ProjectSubCmds::New { name, description } => project::handlers::new(name.to_owned(), description.to_owned()),
                 // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
                 ProjectSubCmds::Ls => project::handlers::list(),
+                ProjectSubCmds::Edit { id, name, description } => project::handlers::edit(*id, name.to_owned(), description.to_owned()),
             }
         },
         // Cmds::Log { sub } => {

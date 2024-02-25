@@ -39,6 +39,27 @@ pub fn list() {
     }
 }
 
+pub fn edit(id: u32, name: Option<String>, description: Option<String>) {
+    let repo = repo_conn();
+
+    match repo.get_project(&id) {
+        Ok((mut proj, _)) => {
+            if let Some(new_name) = name {
+                 proj.name = new_name;
+            }
+            if let Some(new_desc) = description {
+                proj.description = Some(new_desc);
+            }
+
+            match repo.update_project(&proj) {
+                Ok(_) => println!("Project updated successfully."),
+                Err(e) => eprintln!("Failed to update project: {}", e),
+            }
+        },
+        Err(e) => eprintln!("Error retrieving project: {}", e),
+    }
+}
+
 fn print_projects(projects: &Vec<Project>) {
     let mut table = Table::new(vec!["ID".to_string(), "Name".to_string(), "Description".to_string(), "Created".to_string(), "Updated".to_string()]);
     for proj in projects {
