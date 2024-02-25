@@ -1,5 +1,5 @@
 use chrono::{DateTime, Local, TimeZone};
-use rusqlite::{Connection, Result, params};
+use rusqlite::{params, Connection, Result};
 
 use crate::model::{Log, Project};
 
@@ -236,8 +236,8 @@ impl Repository {
         Ok(exists == 1)
     }
 
-    pub fn update_project(&self, project: &Project) -> Result<()> {
-        self.conn.execute(
+    pub fn update_project(&self, project: &Project) -> Result<usize> {
+        match self.conn.execute(
             "UPDATE projects
             SET name = ?1, description = ?2, updated = ?3
             WHERE id = ?4",
@@ -247,9 +247,12 @@ impl Repository {
                 Local::now().timestamp(),
                 project.id
             ]
-        )?;
-
-        Ok(())
+        ) {
+            Ok(updated) => {
+                return Ok(updated)
+            },
+            Err(err) => panic!("Update failed: {}", err),
+        }
     }
 }
 
@@ -485,12 +488,32 @@ mod tests {
         let updated_project = Project::new(project_id, updated_name.to_owned(), Option::Some(updated_desc.to_owned()), Local::now(), Local::now());
 
         // Act
-        repo.update_project(&updated_project).unwrap();
+        let updated_rows = repo.update_project(&updated_project).unwrap();
 
         // Assert
         let (actual_project, _) = repo.get_project(&project_id).unwrap();
         
+        assert_eq!(1, updated_rows);
         assert_eq!(updated_name, actual_project.name);
         assert_eq!(updated_desc, actual_project.description.unwrap());
+    }
+
+    #[test]
+    fn update_project_incorrect_id_should_fail() {
+        // Arrange
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        let updated_name = "updated";
+        let updated_desc = "updated desc";
+        let updated_project = Project::new(project_id + 1, updated_name.to_owned(), Option::Some(updated_desc.to_owned()), Local::now(), Local::now());
+
+        // Act
+        let res =  repo.update_project(&updated_project).unwrap();
+
+        // Assert
+        assert_eq!(0, res);
     }
 }
