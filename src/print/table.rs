@@ -29,11 +29,15 @@ impl Table {
 
         let mut header = String::new();
         for (i, cell) in self.header.iter().enumerate() {
-            header.push_str(&format!("{:width$} ", cell.to_uppercase(), width = max_widths[i]));
+            header.push_str(&format!(
+                "{:width$} ",
+                cell.to_uppercase(),
+                width = max_widths[i]
+            ));
         }
-        
+
         match write!(output, "{}\n", header) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => eprintln!("Error writing to output: {}", e),
         }
 
@@ -43,7 +47,7 @@ impl Table {
                 row_str.push_str(&format!("{:width$} ", cell, width = max_widths[i]));
             }
             match write!(output, "{}\n", row_str) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(e) => eprintln!("Error writing to output: {}", e),
             }
         }
@@ -56,10 +60,26 @@ mod tests {
 
     #[test]
     fn test_table_print() {
-        let mut table = Table::new(vec!["Name".to_string(), "Age".to_string(), "City".to_string()]);
-        table.add_row(vec!["John".to_string(), "25".to_string(), "New York".to_string()]);
-        table.add_row(vec!["Jane".to_string(), "30".to_string(), "London".to_string()]);
-        table.add_row(vec!["Mike".to_string(), "40".to_string(), "Paris".to_string()]);
+        let mut table = Table::new(vec![
+            "Name".to_string(),
+            "Age".to_string(),
+            "City".to_string(),
+        ]);
+        table.add_row(vec![
+            "John".to_string(),
+            "25".to_string(),
+            "New York".to_string(),
+        ]);
+        table.add_row(vec![
+            "Jane".to_string(),
+            "30".to_string(),
+            "London".to_string(),
+        ]);
+        table.add_row(vec![
+            "Mike".to_string(),
+            "40".to_string(),
+            "Paris".to_string(),
+        ]);
 
         let mut output = Vec::new();
         table.print(&mut output);

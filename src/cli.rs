@@ -17,14 +17,14 @@ pub enum Cmds {
         /// Project to log time for
         project: String,
         /// Optional description for work to achieve
-        message: Option<String>
+        message: Option<String>,
     },
     /// Manage your projects
     Project {
         /// Get logs from project + info
         id: Option<u32>,
         #[command(subcommand)]
-        sub: ProjectSubCmds
+        sub: ProjectSubCmds,
     },
     // // Manage logs
     // Log {
@@ -36,11 +36,11 @@ pub enum Cmds {
 #[derive(Subcommand)]
 pub enum ProjectSubCmds {
     /// Create new project to track time spent working towards a work item, task, or goal.
-    New { 
+    New {
         /// Name of the project
         name: String,
         /// Optional project description
-        description: Option<String>
+        description: Option<String>,
     },
     // // Remove project with the given ID
     // Rm { id: u32 },
@@ -56,7 +56,7 @@ pub enum ProjectSubCmds {
         /// New description for project
         #[arg(short, long)]
         description: Option<String>,
-    }
+    },
 }
 
 #[derive(Subcommand)]
@@ -88,19 +88,27 @@ pub enum LogSubCmds {
 
 pub fn handle(cmd: &Cmds) {
     match cmd {
-        Cmds::Start { project, message } => log::handlers::start_logging(project.to_owned(), message.to_owned()),
+        Cmds::Start { project, message } => {
+            log::handlers::start_logging(project.to_owned(), message.to_owned())
+        }
         Cmds::Project { id, sub } => {
             if let Some(id) = id {
                 // project::handlers::get(id)
             }
 
             match sub {
-                ProjectSubCmds::New { name, description } => project::handlers::new(name.to_owned(), description.to_owned()),
+                ProjectSubCmds::New { name, description } => {
+                    project::handlers::new(name.to_owned(), description.to_owned())
+                }
                 // ProjectSubCmds::Rm { id } => project::handlers::remove(id),
                 ProjectSubCmds::Ls => project::handlers::list(),
-                ProjectSubCmds::Edit { id, name, description } => project::handlers::edit(*id, name.to_owned(), description.to_owned()),
+                ProjectSubCmds::Edit {
+                    id,
+                    name,
+                    description,
+                } => project::handlers::edit(*id, name.to_owned(), description.to_owned()),
             }
-        },
+        }
         // Cmds::Log { sub } => {
         //     match sub {
         //         LogSubCmds::Start { project, message } => log::handlers::start_logging(project, message.clone()),

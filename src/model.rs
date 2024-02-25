@@ -5,7 +5,7 @@ pub struct Project {
     pub name: String,
     pub description: Option<String>,
     pub created: DateTime<Local>,
-    pub updated: DateTime<Local>
+    pub updated: DateTime<Local>,
 }
 
 impl Project {
@@ -31,7 +31,7 @@ pub struct Log {
     pub proj_id: u32,
     pub message: String,
     pub start: DateTime<Local>,
-    pub end: DateTime<Local>
+    pub end: DateTime<Local>,
 }
 
 impl Log {
@@ -51,4 +51,3 @@ impl Log {
         }
     }
 }
-

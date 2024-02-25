@@ -14,13 +14,13 @@
 
 //     pub fn save_log(&self, log: &Log) -> Result<u32> {
 //         let message: Box <dyn ToSql> = sql_value_or_null(log.message.clone());
-//         let start_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp()); 
-//         let end_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp()); 
+//         let start_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_start_timestamp());
+//         let end_timestamp: Box<dyn ToSql> = sql_value_or_null(log.maybe_get_end_timestamp());
 
 //         self.conn.execute(
 //             "CREATE TABLE IF NOT EXISTS logs (
 //                 id INTEGER PRIMARY KEY,
-//                 project_id INTEGER NOT NULL, 
+//                 project_id INTEGER NOT NULL,
 //                 message TEXT NOT NULL,
 //                 start INTEGER NOT NULL,
 //                 end INTEGER NOT NULL,
@@ -43,7 +43,7 @@
 //                 &end_timestamp,
 //                 &log.duration.num_seconds(),
 //             ],
-//         )?;       
+//         )?;
 
 //         Ok(self.conn.last_insert_rowid() as u32)
 //     }
@@ -75,4 +75,3 @@
 //         None => Box::new(types::Null)
 //     }
 // }
-

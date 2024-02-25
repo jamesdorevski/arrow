@@ -1,8 +1,14 @@
-use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 use chrono::Local;
 
-use crate::{model::Log, repository::{Repository, Sqlite}};
+use crate::{
+    model::Log,
+    repository::{Repository, Sqlite},
+};
 
 fn repo_conn() -> impl Repository {
     Sqlite::new().expect("Failed to connect to repository!")
@@ -19,7 +25,7 @@ pub fn start_logging(proj: String, msg: String) {
             eprintln!("Error retrieving project: {}", e);
             return;
         }
-    }
+    };
 
     ctrlc::set_handler(move || {
         println!("received Ctrl+C!");
@@ -49,7 +55,7 @@ pub fn start_logging(proj: String, msg: String) {
 
 //     let mut log = Log::new_no_timestamp(0, *proj_id, msg, *dur as i64);
 //     log.id = repo.save_log(&log).expect("Failed to save log!");
-    
+
 //     // println!("Added log {}", log);
 //     Some(log)
 // }

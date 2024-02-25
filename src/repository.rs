@@ -22,16 +22,16 @@ pub struct Sqlite {
 /*
 Contract:
 - save project
-- save log 
+- save log
 - save tag
 - get project
 - get all projects
-- tag query 
+- tag query
 - update project
 - update log
 - delete project
-- delete log 
-- delete tag 
+- delete log
+- delete tag
 */
 
 impl Sqlite {
@@ -45,53 +45,53 @@ impl Sqlite {
 
 impl Repository for Sqlite {
     /// Saves the given project to the database
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `project` - The project to be saved
     fn save_project(&self, project: &Project) -> Result<u32> {
         self.conn.execute(
             "INSERT INTO projects (name, description, created, updated) VALUES (?1, ?2, ?3, ?4)",
             params![
-                project.name, 
-                project.description, 
-                project.created.timestamp(), 
+                project.name,
+                project.description,
+                project.created.timestamp(),
                 project.created.timestamp()
-            ]
+            ],
         )?;
 
         Ok(self.conn.last_insert_rowid() as u32)
     }
 
     /// Saves the log to the database
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `project_id` - ID of the project to save the log under
     /// * `log` - The log to be saved
     fn save_log(&self, project_id: &u32, log: &Log) -> Result<u32> {
         self.conn.execute(
-            "INSERT INTO logs (message, start, end, project_id) VALUES (?1, ?2, ?3, ?4)", 
+            "INSERT INTO logs (message, start, end, project_id) VALUES (?1, ?2, ?3, ?4)",
             params![
                 log.message,
                 log.start.timestamp(),
                 log.end.timestamp(),
                 project_id
-            ]
+            ],
         )?;
 
         Ok(self.conn.last_insert_rowid() as u32)
     }
-    
+
     /// Delete a project by it's ID. Deletes all logs that are associated with it
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `id` - ID of the project to delete
     fn delete_project(&self, id: &u32) {
         match self
             .conn
-            .execute("DELETE FROM logs WHERE project_id = ?1", [id]) 
+            .execute("DELETE FROM logs WHERE project_id = ?1", [id])
         {
             Ok(rows) => {
                 if rows < 1 {
@@ -124,17 +124,17 @@ impl Repository for Sqlite {
         };
     }
 
-    /// Delete a log by it's project ID and log ID. 
+    /// Delete a log by it's project ID and log ID.
     ///
     /// # Arguments
     ///
     /// * `proj_id` - ID of the project to delete the log from
     /// * `log_id` - ID of the log to delete
     fn delete_log(&self, proj_id: &u32, log_id: &u32) {
-        match self
-            .conn
-            .execute("DELETE FROM logs WHERE id = ?1 AND project_id = ?2", [log_id, proj_id])
-        {
+        match self.conn.execute(
+            "DELETE FROM logs WHERE id = ?1 AND project_id = ?2",
+            [log_id, proj_id],
+        ) {
             Ok(rows) => {
                 if rows < 1 {
                     eprintln!(
@@ -162,17 +162,23 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            projects.push(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated));
+            projects.push(Project::new(
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                created,
+                updated,
+            ));
         }
 
         Ok(projects)
     }
 
     /// Retrieve a project, and it's logs with by project ID
-    /// 
+    ///
     /// # Arguments
-    /// 
-    /// - `id` - ID of the project to retrieve 
+    ///
+    /// - `id` - ID of the project to retrieve
     fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
@@ -183,14 +189,20 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated))
+            Ok(Project::new(
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                created,
+                updated,
+            ))
         })?;
 
         stmt = self.conn.prepare(
             "SELECT l.id, l.message, l.start, l.end 
                 FROM projects p
                 INNER JOIN logs l ON p.id = l.project_id
-                WHERE p.id = ?1"
+                WHERE p.id = ?1",
         )?;
 
         let mut rows = stmt.query([id])?;
@@ -199,7 +211,7 @@ impl Repository for Sqlite {
         while let Some(row) = rows.next()? {
             let start = to_datetime(row.get(2)?);
             let end = to_datetime(row.get(3)?);
-            
+
             logs.push(Log::new(row.get(0)?, *id, row.get(1)?, start, end))
         }
 
@@ -216,7 +228,13 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated))
+            Ok(Project::new(
+                row.get(0)?,
+                row.get(1)?,
+                row.get(2)?,
+                created,
+                updated,
+            ))
         })?;
 
         Ok(proj)
@@ -236,7 +254,7 @@ impl Repository for Sqlite {
             WHERE 
                 p.id = ?1 
             AND
-                l.message LIKE %?2%"
+                l.message LIKE %?2%",
         )?;
 
         let mut rows = stmt.query(params![proj_id, msg])?;
@@ -262,11 +280,9 @@ impl Repository for Sqlite {
                 project.description,
                 Local::now().timestamp(),
                 project.id
-            ]
+            ],
         ) {
-            Ok(updated) => {
-                return Ok(updated)
-            },
+            Ok(updated) => return Ok(updated),
             Err(err) => panic!("Update failed: {}", err),
         }
     }
@@ -291,9 +307,9 @@ mod tests {
     // project saves successfully  // DONE
     // logs save successfully // log without a project is rejected  // DONE
     // edge cases - empty string; null string; integer
-    // check if project saves w/o description // DONE 
+    // check if project saves w/o description // DONE
     // delete projects + logs // DONE
-    // update projects + logs 
+    // update projects + logs
 
     fn test_repo() -> impl Repository {
         let mut conn = Connection::open_in_memory().unwrap();
@@ -304,8 +320,14 @@ mod tests {
     fn default_test_project() -> Project {
         let created = Local::now();
         let updated = Local::now();
-        
-        Project::new(0, "test".to_owned(), Option::Some("hi".to_owned()), created, updated)
+
+        Project::new(
+            0,
+            "test".to_owned(),
+            Option::Some("hi".to_owned()),
+            created,
+            updated,
+        )
     }
 
     #[test]
@@ -319,11 +341,17 @@ mod tests {
 
         // Assert
         let (actual_project, _) = repo.get_project(&id.unwrap()).unwrap();
-        
+
         assert_eq!("test", actual_project.name);
         assert_eq!("hi", actual_project.description.unwrap());
-        assert_eq!(project.created.timestamp(), actual_project.created.timestamp());
-        assert_eq!(project.updated.timestamp(), actual_project.updated.timestamp());
+        assert_eq!(
+            project.created.timestamp(),
+            actual_project.created.timestamp()
+        );
+        assert_eq!(
+            project.updated.timestamp(),
+            actual_project.updated.timestamp()
+        );
     }
 
     #[test]
@@ -332,17 +360,17 @@ mod tests {
         let name = "test2";
         let created = Local::now();
         let updated = Local::now();
-        
+
         let project = Project::new(0, name.to_owned(), None, created, updated);
 
-        let repo = test_repo();       
+        let repo = test_repo();
 
         // Act
         let id = repo.save_project(&project);
 
         // Assert
         let (actual_project, _) = repo.get_project(&id.unwrap()).unwrap();
-        
+
         assert_eq!(name, actual_project.name);
         assert_eq!(None, actual_project.description);
         assert_eq!(created.timestamp(), actual_project.created.timestamp());
@@ -353,13 +381,19 @@ mod tests {
     fn all_projects_should_return_all_projects() {
         // Arrange
         let repo = test_repo();
-        
+
         for n in 1..=2 {
             let name = format!("test{}", n);
             let created = Local::now();
             let updated = Local::now();
-            
-            let project = Project::new(0, name.to_owned(), Option::Some("hi".to_owned()), created, updated);
+
+            let project = Project::new(
+                0,
+                name.to_owned(),
+                Option::Some("hi".to_owned()),
+                created,
+                updated,
+            );
             let _ = repo.save_project(&project);
         }
 
@@ -378,13 +412,12 @@ mod tests {
         let created = Local::now();
         let updated = Local::now();
         let project = Project::new(0, "project".to_owned(), None, created, updated);
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         let message = "code cleanup";
         let log = Log::new(0, project_id, message.to_owned(), created, updated);
-        
-        
+
         // Act
         repo.save_log(&project_id, &log).unwrap();
 
@@ -407,10 +440,10 @@ mod tests {
         let repo = test_repo();
         let start = Local::now();
         let end = Local::now();
-        
+
         let message = "code cleanup";
         let log = Log::new(0, 0, message.to_owned(), start, end);
-        
+
         // Act
         let res = repo.save_log(&0, &log);
 
@@ -424,18 +457,24 @@ mod tests {
 
         let repo = test_repo();
         let project = default_test_project();
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         let message = "code cleanup";
-        let log = Log::new(0, project_id, message.to_owned(), project.created, project.updated);
+        let log = Log::new(
+            0,
+            project_id,
+            message.to_owned(),
+            project.created,
+            project.updated,
+        );
 
         repo.save_log(&project_id, &log).unwrap();
-        
+
         // Act
         repo.delete_project(&project_id);
 
-        // confirm log + project is removed 
+        // confirm log + project is removed
         // Assert
         let res = repo.get_project(&project_id);
         assert!(res.is_err());
@@ -446,14 +485,20 @@ mod tests {
         // Arrange
         let repo = test_repo();
         let project = default_test_project();
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         let message = "code cleanup";
-        let log = Log::new(0, project_id, message.to_owned(), project.created, project.updated);
+        let log = Log::new(
+            0,
+            project_id,
+            message.to_owned(),
+            project.created,
+            project.updated,
+        );
 
         let log_id = repo.save_log(&project_id, &log).unwrap();
-        
+
         // Act
         repo.delete_log(&project_id, &log_id);
 
@@ -467,19 +512,25 @@ mod tests {
         // Arrange
         let repo = test_repo();
         let project = default_test_project();
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         let updated_name = "updated";
         let updated_desc = "updated desc";
-        let updated_project = Project::new(project_id, updated_name.to_owned(), Option::Some(updated_desc.to_owned()), Local::now(), Local::now());
+        let updated_project = Project::new(
+            project_id,
+            updated_name.to_owned(),
+            Option::Some(updated_desc.to_owned()),
+            Local::now(),
+            Local::now(),
+        );
 
         // Act
         let updated_rows = repo.update_project(&updated_project).unwrap();
 
         // Assert
         let (actual_project, _) = repo.get_project(&project_id).unwrap();
-        
+
         assert_eq!(1, updated_rows);
         assert_eq!(updated_name, actual_project.name);
         assert_eq!(updated_desc, actual_project.description.unwrap());
@@ -490,15 +541,21 @@ mod tests {
         // Arrange
         let repo = test_repo();
         let project = default_test_project();
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         let updated_name = "updated";
         let updated_desc = "updated desc";
-        let updated_project = Project::new(project_id + 1, updated_name.to_owned(), Option::Some(updated_desc.to_owned()), Local::now(), Local::now());
+        let updated_project = Project::new(
+            project_id + 1,
+            updated_name.to_owned(),
+            Option::Some(updated_desc.to_owned()),
+            Local::now(),
+            Local::now(),
+        );
 
         // Act
-        let res =  repo.update_project(&updated_project).unwrap();
+        let res = repo.update_project(&updated_project).unwrap();
 
         // Assert
         assert_eq!(0, res);
@@ -509,7 +566,7 @@ mod tests {
         // Arrange
         let repo = test_repo();
         let project = default_test_project();
-        
+
         let project_id = repo.save_project(&project).unwrap();
 
         // Act

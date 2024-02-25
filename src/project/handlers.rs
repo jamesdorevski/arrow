@@ -1,6 +1,10 @@
-use chrono::{Local};
+use chrono::Local;
 
-use crate::{model::Project, print::table::Table, repository::{Repository, Sqlite}};
+use crate::{
+    model::Project,
+    print::table::Table,
+    repository::{Repository, Sqlite},
+};
 
 fn repo_conn() -> impl Repository {
     Sqlite::new().expect("Failed to connect to repository!")
@@ -9,8 +13,10 @@ fn repo_conn() -> impl Repository {
 pub fn new(name: String, description: Option<String>) {
     let repo = repo_conn();
     match repo.get_project_by_name(&name) {
-        Ok(_) => 
-            eprintln!("A project with the name \"{}\" already exists. Skipping...", name),
+        Ok(_) => eprintln!(
+            "A project with the name \"{}\" already exists. Skipping...",
+            name
+        ),
         Err(e) if e == rusqlite::Error::QueryReturnedNoRows => {
             let new_proj = Project::new(0, name, description, Local::now(), Local::now());
 
@@ -19,8 +25,7 @@ pub fn new(name: String, description: Option<String>) {
                 Err(e) => eprintln!("Failed to create new project: {}", e),
             }
         }
-        Err(e) => 
-            eprintln!("Error checking for existing project: {}", e)
+        Err(e) => eprintln!("Error checking for existing project: {}", e),
     }
 }
 
@@ -30,7 +35,7 @@ pub fn list() {
     match repo.all_projects() {
         Ok(projects) => {
             print_projects(&projects);
-        },
+        }
         Err(e) => eprintln!("Error retrieving your projects: {}", e),
     }
 }
@@ -41,14 +46,14 @@ pub fn edit(id: u32, name: Option<String>, description: Option<String>) {
     match repo.get_project(&id) {
         Ok((mut proj, _)) => {
             if let Some(new_name) = name {
-                 proj.name = new_name;
+                proj.name = new_name;
             }
             if let Some(new_desc) = description {
                 proj.description = Some(new_desc);
             }
 
             match repo.update_project(&proj) {
-                Ok(updated_rows) => { 
+                Ok(updated_rows) => {
                     if updated_rows > 0 {
                         println!("{} updated successfully.\n", proj.name);
                     } else {
@@ -57,13 +62,19 @@ pub fn edit(id: u32, name: Option<String>, description: Option<String>) {
                 }
                 Err(e) => eprintln!("Failed to update project: {}", e),
             }
-        },
+        }
         Err(e) => eprintln!("Error retrieving project: {}", e),
     }
 }
 
 fn print_projects(projects: &Vec<Project>) {
-    let mut table = Table::new(vec!["ID".to_string(), "Name".to_string(), "Description".to_string(), "Created".to_string(), "Updated".to_string()]);
+    let mut table = Table::new(vec![
+        "ID".to_string(),
+        "Name".to_string(),
+        "Description".to_string(),
+        "Created".to_string(),
+        "Updated".to_string(),
+    ]);
     for proj in projects {
         table.add_row(vec![
             proj.id.to_string(),
@@ -79,9 +90,7 @@ fn print_projects(projects: &Vec<Project>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
 }
-
 
 // pub fn list() {
 //     let repo = repo_conn();
@@ -106,9 +115,8 @@ mod tests {
 //     log::print::print_table(&logs);
 // }
 
-// // TODO: shouldn't this return an Option? 
+// // TODO: shouldn't this return an Option?
 // fn calculate_total_duration(id: &u32) -> Duration {
 //     let conn = repo_conn();
 //     conn.get_total_duration(id).expect("Failed to get total duration")
 // }
-
