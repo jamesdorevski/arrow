@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::project;
-//use crate::log;
+use crate::{log, project};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -13,6 +12,13 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Cmds {
+    /// Start tracking time against a project. Stops when SIGTERM is received
+    Start {
+        /// Project to log time for
+        project: String,
+        /// Optional description for work to achieve
+        message: Option<String>
+    },
     /// Manage your projects
     Project {
         /// Get logs from project + info
@@ -82,6 +88,7 @@ pub enum LogSubCmds {
 
 pub fn handle(cmd: &Cmds) {
     match cmd {
+        Cmds::Start { project, message } => log::handlers::start_logging(project.to_owned(), message.to_owned()),
         Cmds::Project { id, sub } => {
             if let Some(id) = id {
                 // project::handlers::get(id)

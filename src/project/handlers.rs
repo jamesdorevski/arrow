@@ -1,30 +1,26 @@
 use chrono::{Local};
 
-use crate::{model::Project, print::table::Table, repository::Repository};
+use crate::{model::Project, print::table::Table, repository::{Repository, Sqlite}};
 
-fn repo_conn() -> Repository {
-    Repository::new().expect("Failed to connect to repository!")
+fn repo_conn() -> impl Repository {
+    Sqlite::new().expect("Failed to connect to repository!")
 }
 
 pub fn new(name: String, description: Option<String>) {
     let repo = repo_conn();
-    match repo.project_exists(&name) {
-        Ok(true) => {
-            eprintln!("A project with the name \"{}\" already exists. Skipping...", name);
-            return;
-        },
-        Ok(false) => {},
-        Err(e) => {
-            eprintln!("Error checking for existing project: {}", e);
-            return;
+    match repo.get_project_by_name(&name) {
+        Ok(_) => 
+            eprintln!("A project with the name \"{}\" already exists. Skipping...", name),
+        Err(e) if e == rusqlite::Error::QueryReturnedNoRows => {
+            let new_proj = Project::new(0, name, description, Local::now(), Local::now());
+
+            match repo.save_project(&new_proj) {
+                Ok(_) => println!("{} created successfully.\n", new_proj.name),
+                Err(e) => eprintln!("Failed to create new project: {}", e),
+            }
         }
-    }
-
-    let new_proj = Project::new(0, name, description, Local::now(), Local::now());
-
-    match repo.save_project(&new_proj) {
-        Ok(_) => println!("{} created successfully.\n", new_proj.name),
-        Err(e) => eprintln!("Failed to create new project: {}", e),
+        Err(e) => 
+            eprintln!("Error checking for existing project: {}", e)
     }
 }
 

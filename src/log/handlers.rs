@@ -1,37 +1,48 @@
-// use chrono::Local;
-// use std::sync::atomic::{AtomicBool, Ordering};
-// use std::sync::Arc;
+use std::sync::{atomic::{AtomicBool, Ordering}, Arc};
 
-// // use super::repository::Repository;
+use chrono::Local;
 
-// use crate::model::Log;
+use crate::{model::Log, repository::{Repository, Sqlite}};
 
-// pub fn start_logging(proj_id: &u32, msg: Option<String>) -> Option<Log> {
-//     let interrupted = Arc::new(AtomicBool::new(false));
-//     let interrupted_clone = interrupted.clone();
-//     let repo = Repository::new();
+fn repo_conn() -> impl Repository {
+    Sqlite::new().expect("Failed to connect to repository!")
+}
 
-//     ctrlc::set_handler(move || {
-//         println!("received Ctrl+C!");
-//         interrupted_clone.store(true, Ordering::SeqCst);
-//     })
-//     .expect("Error setting Ctrl+C handler");
+pub fn start_logging(proj: String, msg: Option<String>) {
+    todo!();
+    // let interrupted = Arc::new(AtomicBool::new(false));
+    // let interrupted_clone = interrupted.clone();
+    // let repo = repo_conn();
 
-//     let start = Local::now();
-//     println!("Started log at {}", start);
+    // let proj_id = match repo.get_project(&proj) {
+    //     Ok(id) => id,
+    //     Err(e) => {
+    //         eprintln!("Error retrieving project: {}", e);
+    //         return None;
+    //     }
+    // };
 
-//     // hold thread until ctrl c is pressed
-//     while !interrupted.load(Ordering::SeqCst) {}
+    // ctrlc::set_handler(move || {
+    //     println!("received Ctrl+C!");
+    //     interrupted_clone.store(true, Ordering::SeqCst);
+    // })
+    // .expect("Error setting Ctrl+C handler");
 
-//     let end = Local::now();
-//     println!("Finished log at {}", end);
+    // let start = Local::now();
+    // println!("Started log at {}", start);
 
-//     let mut log = Log::new(0, *proj_id, msg, start, end, None);
-//     log.id = repo.save_log(&log).expect("Failed to save log!");
+    // // hold thread until ctrl c is pressed
+    // while !interrupted.load(Ordering::SeqCst) {}
 
-//     // println!("Created log {}", log);
-//     Some(log)
-// }
+    // let end = Local::now();
+    // println!("Finished log at {}", end);
+
+    // let mut log = Log::new(0, *proj_id, msg, start, end);
+    // log.id = repo.save_log(&log).expect("Failed to save log!");
+
+    // println!("Created log {}", log.message);
+    // Some(log)
+}
 
 // pub fn save_log(proj_id: &u32, msg: Option<String>, dur: &u16) -> Option<Log> {
 //     let repo = Repository::new();

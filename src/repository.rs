@@ -1,10 +1,21 @@
 use chrono::{DateTime, Local, TimeZone};
-use mockall::automock;
 use rusqlite::{params, Connection, Result};
 
 use crate::model::{Log, Project};
 
-pub struct Repository {
+pub trait Repository {
+    fn all_projects(&self) -> Result<Vec<Project>>;
+    fn save_project(&self, project: &Project) -> Result<u32>;
+    fn save_log(&self, project_id: &u32, log: &Log) -> Result<u32>;
+    fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)>;
+    fn get_project_by_name(&self, name: &str) -> Result<Project>;
+    fn get_logs(&self, proj_id: &u32, msg: &str) -> Result<Vec<Log>>;
+    fn update_project(&self, project: &Project) -> Result<usize>;
+    fn delete_project(&self, id: &u32);
+    fn delete_log(&self, proj_id: &u32, log_id: &u32);
+}
+
+pub struct Sqlite {
     conn: Connection,
 }
 
@@ -23,21 +34,22 @@ Contract:
 - delete tag 
 */
 
-#[automock]
-impl Repository {
+impl Sqlite {
     pub fn new() -> Result<Self, rusqlite::Error> {
         let xdg_dirs = xdg::BaseDirectories::with_prefix("arrow").unwrap();
         let db_path = xdg_dirs.get_config_home().join("arrow.db");
         let conn = Connection::open(db_path)?;
-        Ok(Repository { conn })
+        Ok(Sqlite { conn })
     }
+}
 
+impl Repository for Sqlite {
     /// Saves the given project to the database
     /// 
     /// # Arguments
     /// 
     /// * `project` - The project to be saved
-    pub fn save_project(&self, project: &Project) -> Result<u32> {
+    fn save_project(&self, project: &Project) -> Result<u32> {
         self.conn.execute(
             "INSERT INTO projects (name, description, created, updated) VALUES (?1, ?2, ?3, ?4)",
             params![
@@ -57,7 +69,7 @@ impl Repository {
     /// 
     /// * `project_id` - ID of the project to save the log under
     /// * `log` - The log to be saved
-    pub fn save_log(&self, project_id: &u32, log: &Log) -> Result<u32> {
+    fn save_log(&self, project_id: &u32, log: &Log) -> Result<u32> {
         self.conn.execute(
             "INSERT INTO logs (message, start, end, project_id) VALUES (?1, ?2, ?3, ?4)", 
             params![
@@ -76,7 +88,7 @@ impl Repository {
     /// # Arguments
     /// 
     /// * `id` - ID of the project to delete
-    pub fn delete_project(&self, id: &u32) {
+    fn delete_project(&self, id: &u32) {
         match self
             .conn
             .execute("DELETE FROM logs WHERE project_id = ?1", [id]) 
@@ -118,7 +130,7 @@ impl Repository {
     ///
     /// * `proj_id` - ID of the project to delete the log from
     /// * `log_id` - ID of the log to delete
-    pub fn delete_log(&self, proj_id: &u32, log_id: &u32) {
+    fn delete_log(&self, proj_id: &u32, log_id: &u32) {
         match self
             .conn
             .execute("DELETE FROM logs WHERE id = ?1 AND project_id = ?2", [log_id, proj_id])
@@ -138,7 +150,7 @@ impl Repository {
     }
 
     /// Retrieve all projects in the database
-    pub fn all_projects(&self) -> Result<Vec<Project>> {
+    fn all_projects(&self) -> Result<Vec<Project>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
             FROM projects",
@@ -161,7 +173,7 @@ impl Repository {
     /// # Arguments
     /// 
     /// - `id` - ID of the project to retrieve 
-    pub fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)> {
+    fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, description, created, updated
             FROM projects
@@ -194,7 +206,23 @@ impl Repository {
         Ok((proj, logs))
     }
 
-    pub fn get_logs(&self, proj_id: &u32, msg: &str) -> Result<Vec<Log>> {
+    fn get_project_by_name(&self, name: &str) -> Result<Project> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, description, created, updated
+            FROM projects
+            WHERE name = ?1",
+        )?;
+        let proj = stmt.query_row([name], |row| {
+            let created = to_datetime(row.get(3)?);
+            let updated = to_datetime(row.get(4)?);
+
+            Ok(Project::new(row.get(0)?, row.get(1)?, row.get(2)?, created, updated))
+        })?;
+
+        Ok(proj)
+    }
+
+    fn get_logs(&self, proj_id: &u32, msg: &str) -> Result<Vec<Log>> {
         let mut stmt = self.conn.prepare(
             "SELECT
                 l.id
@@ -224,21 +252,7 @@ impl Repository {
         Ok(logs)
     }
 
-    pub fn project_exists(&self, name: &str) -> Result<bool> {
-        let mut stmt = self.conn.prepare(
-            "SELECT EXISTS(
-                SELECT 1
-                FROM projects
-                WHERE name = ?1
-            )"
-        )?;
-
-        let exists: i32 = stmt.query_row(params![name], |row| row.get(0))?;
-
-        Ok(exists == 1)
-    }
-
-    pub fn update_project(&self, project: &Project) -> Result<usize> {
+    fn update_project(&self, project: &Project) -> Result<usize> {
         match self.conn.execute(
             "UPDATE projects
             SET name = ?1, description = ?2, updated = ?3
@@ -281,10 +295,10 @@ mod tests {
     // delete projects + logs // DONE
     // update projects + logs 
 
-    fn test_repo() -> Repository {
+    fn test_repo() -> impl Repository {
         let mut conn = Connection::open_in_memory().unwrap();
         embedded::migrations::runner().run(&mut conn).unwrap();
-        Repository { conn }
+        Sqlite { conn }
     }
 
     fn default_test_project() -> Project {
@@ -338,9 +352,7 @@ mod tests {
     #[test]
     fn all_projects_should_return_all_projects() {
         // Arrange
-        let mut conn = Connection::open_in_memory().unwrap();
-        embedded::migrations::runner().run(&mut conn).unwrap();
-        let repo = Repository { conn };
+        let repo = test_repo();
         
         for n in 1..=2 {
             let name = format!("test{}", n);
@@ -451,33 +463,6 @@ mod tests {
     }
 
     #[test]
-    fn project_exists_should_return_true_if_project_exists() {
-        // Arrange
-        let repo = test_repo();
-        let project = default_test_project();
-        
-        let project_id = repo.save_project(&project).unwrap();
-
-        // Act
-        let res = repo.project_exists(&project.name);
-
-        // Assert
-        assert!(res.unwrap());
-    }
-
-    #[test]
-    fn project_exists_should_return_false_if_project_does_not_exist() {
-        // Arrange
-        let repo = test_repo();
-        
-        // Act
-        let res = repo.project_exists("non-existent");
-
-        // Assert
-        assert!(!res.unwrap());
-    }
-
-    #[test]
     fn update_project_should_update_project_in_db() {
         // Arrange
         let repo = test_repo();
@@ -517,5 +502,32 @@ mod tests {
 
         // Assert
         assert_eq!(0, res);
+    }
+
+    #[test]
+    fn get_project_by_name_should_return_project() {
+        // Arrange
+        let repo = test_repo();
+        let project = default_test_project();
+        
+        let project_id = repo.save_project(&project).unwrap();
+
+        // Act
+        let actual_project = repo.get_project_by_name(&project.name).unwrap();
+
+        // Assert
+        assert_eq!(project_id, actual_project.id);
+    }
+
+    #[test]
+    fn get_project_by_name_no_project_found_should_return_error() {
+        // Arrange
+        let repo = test_repo();
+
+        // Act
+        let res = repo.get_project_by_name("not a project");
+
+        // Assert
+        assert!(res.is_err());
     }
 }
