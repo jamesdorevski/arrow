@@ -3,10 +3,11 @@ use std::sync::{
     Arc,
 };
 
-use chrono::Local;
+use chrono::{DateTime, Local};
 
 use crate::{
     model::Log,
+    project,
     repository::{Repository, Sqlite},
 };
 
@@ -14,21 +15,11 @@ fn repo_conn() -> impl Repository {
     Sqlite::new().expect("Failed to connect to repository!")
 }
 
-pub fn start_logging(proj: String, msg: String) {
+fn track_work() -> (DateTime<Local>, DateTime<Local>) {
     let interrupted = Arc::new(AtomicBool::new(false));
     let interrupted_clone = interrupted.clone();
-    let repo = repo_conn();
-
-    let project_id = match repo.get_project_by_name(&proj) {
-        Ok(p) => p.id,
-        Err(e) => {
-            eprintln!("Error retrieving project: {}", e);
-            return;
-        }
-    };
 
     ctrlc::set_handler(move || {
-        println!("received Ctrl+C!");
         interrupted_clone.store(true, Ordering::SeqCst);
     })
     .expect("Error setting Ctrl+C handler");
@@ -42,12 +33,33 @@ pub fn start_logging(proj: String, msg: String) {
     let end = Local::now();
     println!("Finished log at {}", end);
 
-    let mut log = Log::new(0, project_id, msg, start, end);
+    (start, end)
+}
 
-    match repo.save_log(&project_id, &log) {
-        Ok(_) => println!("Created log {}", log.message),
-        Err(e) => eprintln!("Failed to save log: {}", e),
-    }
+pub fn new(proj_name: String, msg: String) {
+    let repo = repo_conn();
+
+    match repo.get_project_by_name(&proj_name) {
+        Err(e) => match e {
+            rusqlite::Error::QueryReturnedNoRows => eprintln!(
+                "Project {} not found. Would you like to create it? (Y/N)",
+                proj_name
+            ),
+            _ => eprintln!("Error retrieving project: {}", e),
+        },
+        Ok(p) => {
+            let work_time = track_work();
+            let log = Log::new(0, p.id, msg, work_time.0, work_time.1);
+
+            match repo.save_log(&p.id, &log) {
+                Err(e) => eprintln!("Failed to save log: {}", e),
+                Ok(_) => {
+                    println!("Created log {}. Updating project duration...", log.message);
+                    project::handlers::update(p.id, None, None);
+                }
+            }
+        }
+    };
 }
 
 // pub fn save_log(proj_id: &u32, msg: Option<String>, dur: &u16) -> Option<Log> {
@@ -65,3 +77,6 @@ pub fn start_logging(proj: String, msg: String) {
 //     repo.remove_log(proj_id, log_id);
 //     None
 // }
+
+#[cfg(test)]
+mod tests {}

@@ -16,8 +16,8 @@ pub enum Cmds {
     Start {
         /// Project to log time for
         project: String,
-        /// Optional description for work to achieve
-        message: Option<String>,
+        /// Description for work to achieve
+        message: String,
     },
     /// Manage your projects
     Project {
@@ -89,7 +89,7 @@ pub enum LogSubCmds {
 pub fn handle(cmd: &Cmds) {
     match cmd {
         Cmds::Start { project, message } => {
-            log::handlers::start_logging(project.to_owned(), message.to_owned())
+            log::handlers::new(project.to_owned(), message.to_owned())
         }
         Cmds::Project { id, sub } => {
             if let Some(id) = id {
@@ -106,7 +106,7 @@ pub fn handle(cmd: &Cmds) {
                     id,
                     name,
                     description,
-                } => project::handlers::edit(*id, name.to_owned(), description.to_owned()),
+                } => project::handlers::update(*id, name.to_owned(), description.to_owned()),
             }
         }
         // Cmds::Log { sub } => {

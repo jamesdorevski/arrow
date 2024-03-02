@@ -1,8 +1,10 @@
 use chrono::{DateTime, Local, TimeZone};
+use mockall::automock;
 use rusqlite::{params, Connection, Result};
 
 use crate::model::{Log, Project};
 
+#[automock]
 pub trait Repository {
     fn all_projects(&self) -> Result<Vec<Project>>;
     fn save_project(&self, project: &Project) -> Result<u32>;
@@ -51,12 +53,13 @@ impl Repository for Sqlite {
     /// * `project` - The project to be saved
     fn save_project(&self, project: &Project) -> Result<u32> {
         self.conn.execute(
-            "INSERT INTO projects (name, description, created, updated) VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO projects (name, description, created, updated, duration) VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
                 project.name,
                 project.description,
                 project.created.timestamp(),
-                project.created.timestamp()
+                project.created.timestamp(),
+                project.duration
             ],
         )?;
 
@@ -93,23 +96,15 @@ impl Repository for Sqlite {
             .conn
             .execute("DELETE FROM logs WHERE project_id = ?1", [id])
         {
-            Ok(rows) => {
-                if rows < 1 {
-                    eprintln!(
-                        "No logs for project with id {} exists. Please specify an existing project.",
-                        id
-                    );
-                } else {
-                    println!("Deleted logs for project {}", id);
-                }
-            }
             Err(err) => panic!("Delete failed: {}", err),
+            Ok(_) => {}
         }
 
         match self
             .conn
             .execute("DELETE FROM projects WHERE id = ?1", [id])
         {
+            Err(err) => panic!("Delete failed: {}", err),
             Ok(rows) => {
                 if rows < 1 {
                     eprintln!(
@@ -120,7 +115,6 @@ impl Repository for Sqlite {
                     println!("Deleted project {}", id);
                 }
             }
-            Err(err) => panic!("Delete failed: {}", err),
         };
     }
 
@@ -152,7 +146,7 @@ impl Repository for Sqlite {
     /// Retrieve all projects in the database
     fn all_projects(&self) -> Result<Vec<Project>> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, name, description, created, updated
+            "SELECT id, name, description, created, updated, duration
             FROM projects",
         )?;
         let mut rows = stmt.query([])?;
@@ -162,12 +156,13 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            projects.push(Project::new(
+            projects.push(Project::load(
                 row.get(0)?,
                 row.get(1)?,
                 row.get(2)?,
                 created,
                 updated,
+                row.get(5)?
             ));
         }
 
@@ -181,7 +176,7 @@ impl Repository for Sqlite {
     /// - `id` - ID of the project to retrieve
     fn get_project(&self, id: &u32) -> Result<(Project, Vec<Log>)> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, name, description, created, updated
+            "SELECT id, name, description, created, updated, duration
             FROM projects
             WHERE id = ?1",
         )?;
@@ -189,12 +184,13 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            Ok(Project::new(
+            Ok(Project::load(
                 row.get(0)?,
                 row.get(1)?,
                 row.get(2)?,
                 created,
                 updated,
+                row.get(5)?
             ))
         })?;
 
@@ -220,7 +216,7 @@ impl Repository for Sqlite {
 
     fn get_project_by_name(&self, name: &str) -> Result<Project> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, name, description, created, updated
+            "SELECT id, name, description, created, updated, duration
             FROM projects
             WHERE name = ?1",
         )?;
@@ -228,12 +224,13 @@ impl Repository for Sqlite {
             let created = to_datetime(row.get(3)?);
             let updated = to_datetime(row.get(4)?);
 
-            Ok(Project::new(
+            Ok(Project::load(
                 row.get(0)?,
                 row.get(1)?,
                 row.get(2)?,
                 created,
                 updated,
+                row.get(5)?
             ))
         })?;
 
@@ -273,12 +270,13 @@ impl Repository for Sqlite {
     fn update_project(&self, project: &Project) -> Result<usize> {
         match self.conn.execute(
             "UPDATE projects
-            SET name = ?1, description = ?2, updated = ?3
-            WHERE id = ?4",
+            SET name = ?1, description = ?2, updated = ?3, duration = ?4
+            WHERE id = ?5",
             params![
                 project.name,
                 project.description,
                 Local::now().timestamp(),
+                project.duration,
                 project.id
             ],
         ) {
@@ -322,7 +320,6 @@ mod tests {
         let updated = Local::now();
 
         Project::new(
-            0,
             "test".to_owned(),
             Option::Some("hi".to_owned()),
             created,
@@ -352,6 +349,7 @@ mod tests {
             project.updated.timestamp(),
             actual_project.updated.timestamp()
         );
+        assert_eq!(0, actual_project.duration);
     }
 
     #[test]
@@ -361,7 +359,7 @@ mod tests {
         let created = Local::now();
         let updated = Local::now();
 
-        let project = Project::new(0, name.to_owned(), None, created, updated);
+        let project = Project::new(name.to_owned(), None, created, updated);
 
         let repo = test_repo();
 
@@ -388,7 +386,6 @@ mod tests {
             let updated = Local::now();
 
             let project = Project::new(
-                0,
                 name.to_owned(),
                 Option::Some("hi".to_owned()),
                 created,
@@ -411,7 +408,7 @@ mod tests {
 
         let created = Local::now();
         let updated = Local::now();
-        let project = Project::new(0, "project".to_owned(), None, created, updated);
+        let project = Project::new("project".to_owned(), None, created, updated);
 
         let project_id = repo.save_project(&project).unwrap();
 
@@ -517,12 +514,13 @@ mod tests {
 
         let updated_name = "updated";
         let updated_desc = "updated desc";
-        let updated_project = Project::new(
+        let updated_project = Project::load(
             project_id,
             updated_name.to_owned(),
             Option::Some(updated_desc.to_owned()),
             Local::now(),
             Local::now(),
+            0
         );
 
         // Act
@@ -546,12 +544,13 @@ mod tests {
 
         let updated_name = "updated";
         let updated_desc = "updated desc";
-        let updated_project = Project::new(
+        let updated_project = Project::load(
             project_id + 1,
             updated_name.to_owned(),
             Option::Some(updated_desc.to_owned()),
             Local::now(),
             Local::now(),
+            0
         );
 
         // Act
