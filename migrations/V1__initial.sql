@@ -3,5 +3,6 @@ CREATE TABLE projects (
 	name TEXT NOT NULL,
 	description TEXT,
 	created INTEGER NOT NULL,
-	updated INTEGER NOT NULL
+	updated INTEGER NOT NULL,
+	duration INTEGER NOT NULL
 );
