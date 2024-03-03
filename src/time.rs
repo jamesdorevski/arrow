@@ -8,3 +8,6 @@ pub fn to_datetime(timestamp: i64) -> DateTime<Local> {
         .expect("Failed to read timestamp")
 }
 
+pub fn duration_hours(duration: u32) -> String {
+    format!("{0:.2}", duration as f64 / 60.0 / 60.0)
+}

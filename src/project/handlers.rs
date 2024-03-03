@@ -3,7 +3,7 @@ use chrono::Local;
 use crate::{
     model::{Log, Project},
     print::table::Table,
-    repository::{Repository, Sqlite},
+    repository::{Repository, Sqlite}, time::duration_hours,
 };
 
 fn repo_conn() -> impl Repository {
@@ -26,6 +26,7 @@ fn print_projects(projects: &Vec<Project>) {
         "Description".to_string(),
         "Created".to_string(),
         "Updated".to_string(),
+        "Duration".to_string()
     ]);
     for proj in projects {
         table.add_row(vec![
@@ -34,6 +35,7 @@ fn print_projects(projects: &Vec<Project>) {
             proj.description.clone().unwrap_or("".to_string()),
             proj.created.to_string(),
             proj.updated.to_string(),
+            duration_hours(proj.duration)
         ]);
     }
     table.print(&mut std::io::stdout());
